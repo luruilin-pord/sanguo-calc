@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三国冰河时代 - 终极跑商计算器</title>
+    <style>
+        :root {
+            --primary-color: #2575fc;
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --border-color: #ddd;
+            --success-color: #2e7d32;
+            --danger-color: #d32f2f;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: visible; /* 允许下拉框溢出显示 */
+        }
+        h1 {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            margin: 0;
+            font-size: 24px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            font-size: 14px;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 20; /* 提高层级 */
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        tr:nth-child(even) { background-color: #fafafa; }
+        tr:hover { background-color: #f1f7ff; }
+        
+        /* 输入框通用样式 */
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 117, 252, 0.2);
+            z-index: 5;
+            position: relative;
+        }
+
+        /* 自定义下拉选择器核心样式 */
+        .custom-select-wrapper {
+            position: relative;
+            user-select: none;
+            width: 100%;
+            z-index: 30; /* 确保高于表格其他部分 */
+        }
+        .custom-select-input {
+            cursor: text; /* 改为文本光标，提示可输入 */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+            background-color: #fff;
+        }
+        .custom-options {
+            position: absolute;
+            display: block;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border: 1px solid var(--primary-color);
+            border-top: 0;
+            background: #fff;
+            transition: all 0.2s;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            z-index: 1000; /* 极高优先级，防止被遮挡 */
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            border-radius: 0 0 4px 4px;
+            margin-top: -1px; /* 无缝连接 */
+        }
+        .custom-select-wrapper.open .custom-options {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+        .custom-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .custom-option:hover {
+            background-color: #eef2ff;
+            color: var(--primary-color);
+        }
+        .custom-option.selected {
+            background-color: #e0e7ff;
+            font-weight: bold;
+        }
+        .custom-option span.weight-tag {
+            font-size: 12px;
+            color: #888;
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .no-results {
+            padding: 15px;
+            color: #999;
+            text-align: center;
+            font-style: italic;
+            display: none;
+        }
+
+        .profit-cell {
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 13px;
+            color: #666;
+            background-color: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 5px;
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>三国冰河时代 - 终极跑商计算器 <span class="badge">自动负重 + 全税率</span></h1>
+        <table id="tradingTable">
+            <thead>
+                <tr>
+                    <th style="width: 18%;">商品名称<br><span style="font-size:12px;font-weight:normal;color:#666">支持拼音/中文/首字母</span></th>
+                    <th style="width: 10%;">买入价</th>
+                    <th style="width: 10%;">卖出价</th>
+                    <th style="width: 10%;">已占用负重</th>
+                    <th style="width: 10%;">马车总负重</th>
+                    <th style="width: 10%;">单件负重<br><span style="font-size:12px;font-weight:normal;color:#666">自动填充</span></th>
+                    <th style="width: 12%;">税率<br><span style="font-size:12px;font-weight:normal;color:#666">10%-90%</span></th>
+                    <th style="width: 12%;">预计利润</th>
+                    <th style="width: 8%;"><button onclick="addRow()" style="background:#2575fc;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">+ 添加</button></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 行将由JS动态生成，保证初始状态一致 -->
+            </tbody>
+        </table>
+        <div class="footer">
+            💡 <strong>使用技巧：</strong> 点击商品框直接输入拼音 (如 "tks" = 铜矿石) 或中文。选择后负重自动填入。税率支持10%-90%任意档位。
+        </div>
+    </div>
+
+    <script>
+        // 完整的25种材料数据库
+        const productData = [
+            { name: "黏土", weight: 15, py: "nian tu" },
+            { name: "棉花", weight: 13, py: "mian hua" },
+            { name: "茶叶", weight: 13, py: "cha ye" },
+            { name: "铁矿石", weight: 34, py: "tie kuang shi" },
+            { name: "铜矿石", weight: 35, py: "tong kuang shi" },
+            { name: "谷物", weight: 10, py: "gu wu" },
+            { name: "葡萄", weight: 10, py: "pu tao" },
+            { name: "硬木", weight: 15, py: "ying mu" },
+            { name: "药材", weight: 11, py: "yao cai" },
+            { name: "香料", weight: 10, py: "xiang liao" },
+            { name: "毛皮", weight: 18, py: "mao pi" },
+            { name: "蜂蜜", weight: 29, py: "feng mi" },
+            { name: "盐", weight: 35, py: "yan" },
+            { name: "米酒", weight: 30, py: "mi jiu" },
+            { name: "陶器", weight: 30, py: "tao qi" },
+            { name: "葡萄酒", weight: 30, py: "pu tao jiu" },
+            { name: "兵器", weight: 52, py: "bing qi" },
+            { name: "铜器", weight: 55, py: "tong qi" },
+            { name: "工具", weight: 50, py: "gong ju" },
+            { name: "布帛", weight: 16, py: "bu bo" },
+            { name: "蜀锦", weight: 10, py: "shu jin" },
+            { name: "漆器", weight: 32, py: "qi qi" },
+            { name: "玉器", weight: 32, py: "yu qi" },
+            { name: "海南珍珠", weight: 12, py: "hai nan zhen zhu" },
+            { name: "金银器", weight: 27, py: "jin yin qi" }
+        ];
+
+        // 初始化页面
+        window.onload = function() {
+            addRow("铜矿石", 34.9, 42.5, 500, 6000, 0.2);
+            addRow("黏土", 16.8, 23.4, 500, 6000, 0.1);
+            addRow("葡萄", 12.1, 16.8, 900, 7000, 0.2);
+        };
+
+        function addRow(defaultProduct = "", buy = "", sell = "", used = "", max = "", tax = "") {
+            const tbody = document.querySelector('#tradingTable tbody');
+            const tr = document.createElement('tr');
+            
+            // 生成税率选项 (0%, 10% - 90%)
+            let taxOptions = `<option value="0">0%</option>`;
+            for (let i = 10; i <= 90; i++) {
+                taxOptions += `<option value="${i/100}" ${i/100 == tax ? 'selected' : ''}>${i}%</option>`;
+            }
+
+            tr.innerHTML = `
+                <td>
+                    <div class="custom-select-wrapper" data-default="${defaultProduct}">
+                        <input type="text" class="custom-select-input" placeholder="输入拼音或中文..." autocomplete="off">
+                        <div class="custom-options"></div>
+                    </div>
+                </td>
+                <td><input type="number" class="buy-price" value="${buy}" step="0.1"></td>
+                <td><input type="number" class="sell-price" value="${sell}" step="0.1"></td>
+                <td><input type="number" class="used-weight" value="${used}"></td>
+                <td><input type="number" class="max-weight" value="${max}"></td>
+                <td><input type="number" class="item-weight" value="" readonly style="background-color:#f0f0f0;"></td>
+                <td>
+                    <select class="tax-rate">
+                        ${taxOptions}
+                    </select>
+                </td>
+                <td class="profit-cell">0.00</td>
+                <td><button onclick="removeRow(this)" style="background:#ff5252;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">×</button></td>
+            `;
+            
+            tbody.appendChild(tr);
+            
+            // 初始化该行的下拉逻辑
+            const wrapper = tr.querySelector('.custom-select-wrapper');
+            initCustomSelect(wrapper);
+            
+            // 如果有默认值，选中它
+            if (defaultProduct) {
+                // 稍微延迟以确保DOM就绪
+                setTimeout(() => {
+                    const input = wrapper.querySelector('.custom-select-input');
+                    input.value = defaultProduct;
+                    selectOption(wrapper, defaultProduct, true);
+                }, 0);
+            }
+
+            // 绑定该行其他输入事件
+            tr.querySelectorAll('input, select').forEach(input => {
+                input.addEventListener('input', () => calculateProfit(tr));
+            });
+        }
+
+        function removeRow(btn) {
+            const rows = document.querySelectorAll('#tradingTable tbody tr');
+            if (rows.length > 1) {
+                btn.closest('tr').remove();
+            } else {
+                alert("至少保留一行数据！");
+            }
+        }
+
+        function initCustomSelect(wrapper) {
+            const input = wrapper.querySelector('.custom-select-input');
+            const optionsContainer = wrapper.querySelector('.custom-options');
+            const row = wrapper.closest('tr');
+            const weightInput = row.querySelector('.item-weight');
+            
+            // 生成选项列表
+            productData.forEach(prod => {
+                const div = document.createElement('div');
+                div.className = 'custom-option';
+                div.innerHTML = `<span>${prod.name}</span> <span class="weight-tag">${prod.weight}</span>`;
+                div.dataset.value = prod.name;
+                div.dataset.weight = prod.weight;
+                div.dataset.py = prod.py;
+                optionsContainer.appendChild(div);
+            });
+
+            const noResults = document.createElement('div');
+            noResults.className = 'no-results';
+            noResults.textContent = '未找到匹配商品';
+            optionsContainer.appendChild(noResults);
+
+            // 1. 聚焦时打开下拉框
+            input.addEventListener('focus', (e) => {
+                e.stopPropagation();
+                closeAllSelects();
+                wrapper.classList.add('open');
+                filterOptions(input.value, optionsContainer, noResults);
+            });
+
+            // 2. 输入时过滤
+            input.addEventListener('input', (e) => {
+                e.stopPropagation(); // 阻止冒泡
+                wrapper.classList.add('open');
+                filterOptions(input.value, optionsContainer, noResults);
+            });
+
+            // 3. 点击选项
+            optionsContainer.addEventListener('mousedown', (e) => { // 使用 mousedown 防止 blur 先触发
+                e.preventDefault(); // 防止输入框失去焦点
+                if (e.target.classList.contains('custom-option') || e.target.parentElement.classList.contains('custom-option')) {
+                    const target = e.target.classList.contains('custom-option') ? e.target : e.target.parentElement;
+                    selectOption(wrapper, target.dataset.value, true);
+                }
+            });
+
+            // 4. 点击外部关闭
+            document.addEventListener('click', (e) => {
+                if (!wrapper.contains(e.target)) {
+                    wrapper.classList.remove('open');
+                }
+            });
+            
+            // 5. 允许手动修改负重（双击或聚焦）
+            weightInput.addEventListener('focus', function() {
+                this.style.backgroundColor = '#fff';
+                this.style.borderColor = '#ffa000';
+            });
+            weightInput.addEventListener('blur', function() {
+                if(!this.value) this.style.backgroundColor = '#f0f0f0';
+            });
+        }
+
+        function filterOptions(query, container, noResultsMsg) {
+            const options = container.querySelectorAll('.custom-option');
+            let hasResult = false;
+            const q = query.toLowerCase().trim();
+            
+            options.forEach(opt => {
+                const name = opt.dataset.value;
+                const py = opt.dataset.py;
+                
+                // 匹配逻辑：中文包含 或 拼音全拼包含 或 拼音首字母匹配
+                const matchName = name.includes(q);
+                
+                // 拼音处理：支持 "tongkuangshi" 或 "tks"
+                const pyNoSpace = py.replace(/\s/g, '');
+                const pyFirstChars = py.split(' ').map(w => w[0]).join('');
+                
+                const matchPyFull = pyNoSpace.includes(q);
+                const matchPyFirst = pyFirstChars.includes(q);
+
+                if (matchName || matchPyFull || matchPyFirst) {
+                    opt.style.display = 'flex';
+                    hasResult = true;
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+
+            noResultsMsg.style.display = hasResult ? 'none' : 'block';
+        }
+
+        function selectOption(wrapper, value, forceUpdateWeight) {
+            const input = wrapper.querySelector('.custom-select-input');
+            const options = wrapper.querySelectorAll('.custom-option');
+            const row = wrapper.closest('tr');
+            const weightInput = row.querySelector('.item-weight');
+            
+            const product = productData.find(p => p.name === value);
+            
+            input.value = value;
+            wrapper.classList.remove('open');
+            
+            options.forEach(opt => {
+                if (opt.dataset.value === value) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+
+            if (product && forceUpdateWeight) {
+                weightInput.value = product.weight;
+                // 视觉反馈
+                weightInput.style.backgroundColor = '#e8f5e9';
+                setTimeout(() => {
+                    if (document.activeElement !== weightInput) {
+                        weightInput.style.backgroundColor = '#f0f0f0';
+                    }
+                }, 500);
+            }
+
+            calculateProfit(row);
+        }
+
+        function closeAllSelects() {
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+                if (w !== event.currentTarget) w.classList.remove('open');
+            });
+        }
+
+        function calculateProfit(row) {
+            const buyPrice = parseFloat(row.querySelector('.buy-price').value) || 0;
+            const sellPrice = parseFloat(row.querySelector('.sell-price').value) || 0;
+            const usedWeight = parseFloat(row.querySelector('.used-weight').value) || 0;
+            const maxWeight = parseFloat(row.querySelector('.max-weight').value) || 0;
+            let itemWeight = parseFloat(row.querySelector('.item-weight').value);
+            const taxRate = parseFloat(row.querySelector('.tax-rate').value) || 0;
+            
+            // 如果负重为空，暂时按1计算避免除以0错误，但利润会不准，提示用户选择商品
+            if (!itemWeight) itemWeight = 1;
+
+            const availableWeight = Math.max(0, maxWeight - usedWeight);
+            const quantity = availableWeight / itemWeight;
+            const profit = (sellPrice - buyPrice) * quantity * (1 - taxRate);
+            
+            const profitCell = row.querySelector('.profit-cell');
+            profitCell.textContent = profit.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+            if (profit < 0) {
+                profitCell.style.color = 'var(--danger-color)';
+            } else if (profit === 0) {
+                profitCell.style.color = '#666';
+            } else {
+                profitCell.style.color = 'var(--success-color)';
+            }
+        }
+    </script>
+</body>
+</html>

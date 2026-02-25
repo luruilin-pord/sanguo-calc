@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>三国冰河·跑商计算器</title>
+    <title>三国冰河·跑商计算器 (精准版)</title>
     <style>
         :root { --primary: #2575fc; --bg: #f5f5f5; --text: #333; --success: #2e7d32; --danger: #d32f2f; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
         .container { max-width: 100%; margin: 0 auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow-x: auto; }
         h1 { text-align: center; padding: 15px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: #fff; margin: 0; font-size: 18px; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { padding: 8px 5px; text-align: center; border-bottom: 1px solid #eee; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 8px 5px; text-align: center; border-bottom: 1px solid #eee; font-size: 12px; }
         th { background: #f8f9fa; font-weight: 600; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
         input, select { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
         input:focus, select:focus { outline: none; border-color: var(--primary); }
@@ -24,33 +24,41 @@
         .weight-tag { font-size: 10px; background: #eee; padding: 1px 4px; border-radius: 3px; }
         .no-results { padding: 8px; text-align: center; color: #999; font-style: italic; display: none; }
         
-        .profit-cell { font-weight: bold; color: var(--success); font-size: 13px; }
+        .profit-cell { font-weight: bold; font-size: 13px; }
+        .status-ok { color: var(--success); }
+        .status-warn { color: #f57c00; }
+        .status-error { color: var(--danger); }
+        
         .btn-add { background: var(--primary); color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 13px; margin: 10px auto; display: block; }
         .btn-del { background: #ff5252; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         .footer { text-align: center; padding: 10px; font-size: 11px; color: #666; background: #f8f9fa; }
+        .note { font-size: 11px; color: #666; text-align: center; padding: 8px; background: #fff3cd; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🧊 三国冰河·跑商计算器</h1>
+        <h1>🧊 三国冰河·跑商计算器 (精准版)</h1>
+        <div class="note">💡 <strong>用法：</strong>如果自动计算的利润不对，请在“交易数量”栏<strong>手动填入</strong>游戏里实际能买的数量。</div>
         <table id="tradingTable">
             <thead>
                 <tr>
-                    <th style="width: 18%;">商品</th>
-                    <th style="width: 10%;">买入</th>
-                    <th style="width: 10%;">卖出</th>
-                    <th style="width: 10%;">已占</th>
-                    <th style="width: 10%;">总重</th>
-                    <th style="width: 10%;">单重</th>
-                    <th style="width: 10%;">税率</th>
-                    <th style="width: 12%;">利润</th>
-                    <th style="width: 10%;">操作</th>
+                    <th style="width: 12%;">商品</th>
+                    <th style="width: 8%;">买入</th>
+                    <th style="width: 8%;">卖出</th>
+                    <th style="width: 8%;">已占</th>
+                    <th style="width: 8%;">总重</th>
+                    <th style="width: 8%;">单重</th>
+                    <th style="width: 10%;">交易数量<br><span style="font-weight:normal;font-size:10px;color:#888">(留空=自动算)</span></th>
+                    <th style="width: 8%;">税率</th>
+                    <th style="width: 12%;">预计利润</th>
+                    <th style="width: 8%;">状态</th>
+                    <th style="width: 8%;">操作</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
         <button class="btn-add" onclick="addRow()">+ 添加一行</button>
-        <div class="footer">💡 输入拼音首字母搜索 (如 "tks"=铜矿石)</div>
+        <div class="footer">输入拼音首字母搜索 (如 "tks"=铜矿石)</div>
     </div>
 
     <script>
@@ -67,12 +75,12 @@
         ];
 
         window.onload = () => {
-            addRow("铜矿石", 34.9, 42.5, 500, 6000, 0.2);
-            addRow("黏土", 16.8, 23.4, 500, 6000, 0.1);
-            addRow("葡萄", 12.1, 16.8, 900, 7000, 0.2);
+            // 示例：谷物，手动填入数量 742 来匹配游戏数据
+            addRow("谷物", 14.1, 17.6, 0, 6000, 742, 0.2); 
+            addRow("茶叶", 58.4, 73.1, 247, 7000, "", 0.1);
         };
 
-        function addRow(defName="", buy="", sell="", used="", max="", taxVal="") {
+        function addRow(defName="", buy="", sell="", used="", max="", qty="", taxVal="") {
             const tbody = document.querySelector('#tradingTable tbody');
             const tr = document.createElement('tr');
             
@@ -86,8 +94,10 @@
                 <td><input type="number" class="used-weight" value="${used}"></td>
                 <td><input type="number" class="max-weight" value="${max}"></td>
                 <td><input type="number" class="item-weight" value="" readonly style="background:#f0f0f0;"></td>
+                <td><input type="number" class="plan-qty" value="${qty}" placeholder="自动" step="1"></td>
                 <td><select class="tax-rate">${taxOpts}</select></td>
                 <td class="profit-cell">0.00</td>
+                <td class="status-cell">-</td>
                 <td><button class="btn-del" onclick="this.closest('tr').remove();if(!document.querySelectorAll('tbody tr').length)addRow();">×</button></td>
             `;
             tbody.appendChild(tr);
@@ -151,8 +161,8 @@
                 wInp.value = prod.w;
                 wInp.style.background = '#e8f5e9';
                 setTimeout(()=>{ if(document.activeElement!==wInp) wInp.style.background='#f0f0f0'; }, 500);
+                calc(row);
             }
-            calc(row);
         }
 
         function closeAll() { document.querySelectorAll('.custom-select-wrapper').forEach(w=>w.classList.remove('open')); }
@@ -164,12 +174,43 @@
             const m = parseFloat(row.querySelector('.max-weight').value)||0;
             let w = parseFloat(row.querySelector('.item-weight').value);
             const t = parseFloat(row.querySelector('.tax-rate').value)||0;
+            const qtyInput = row.querySelector('.plan-qty').value.trim();
+            
             if(!w) w=1;
-            const avail = Math.max(0, m-u);
-            const profit = (s-b) * (avail/w) * (1-t);
-            const cell = row.querySelector('.profit-cell');
-            cell.textContent = profit.toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
-            cell.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+            
+            let quantity = 0;
+            let statusMsg = "";
+            let statusClass = "status-ok";
+
+            if (qtyInput === "") {
+                // 模式A：自动计算 (总重 - 已占) / 单重
+                const avail = Math.max(0, m - u);
+                quantity = Math.floor(avail / w);
+                statusMsg = `自动 (${quantity}个)`;
+                if (quantity === 0 && avail > 0) statusMsg = "单重过大";
+            } else {
+                // 模式B：按用户输入的数量
+                quantity = parseInt(qtyInput);
+                const totalWeight = quantity * w;
+                if (totalWeight + u > m) {
+                    statusMsg = `超重! (${totalWeight+u}/${m})`;
+                    statusClass = "status-error";
+                } else {
+                    const usage = (((totalWeight+u)/m)*100).toFixed(1);
+                    statusMsg = `占用 ${usage}%`;
+                    statusClass = "status-ok";
+                }
+            }
+
+            const profit = (s - b) * quantity * (1 - t);
+            const profitCell = row.querySelector('.profit-cell');
+            const statusCell = row.querySelector('.status-cell');
+            
+            profitCell.textContent = profit.toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
+            profitCell.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+            
+            statusCell.textContent = statusMsg;
+            statusCell.className = "status-cell " + statusClass;
         }
     </script>
 </body>

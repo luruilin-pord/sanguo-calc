@@ -3,65 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>三国冰河·跑商计算器 (精准版)</title>
+    <title>三国冰河·极简跑商计算器</title>
     <style>
-        :root { --primary: #2575fc; --bg: #f5f5f5; --text: #333; --success: #2e7d32; --danger: #d32f2f; }
+        :root { --primary: #2575fc; --bg: #f5f5f5; --text: #333; --success: #2e7d32; --danger: #d32f2f; --warn: #f57c00; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        .container { max-width: 100%; margin: 0 auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow-x: auto; }
-        h1 { text-align: center; padding: 15px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: #fff; margin: 0; font-size: 18px; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th, td { padding: 8px 5px; text-align: center; border-bottom: 1px solid #eee; font-size: 12px; }
-        th { background: #f8f9fa; font-weight: 600; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
-        input, select { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
-        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        .container { max-width: 100%; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden; }
+        h1 { text-align: center; padding: 15px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: #fff; margin: 0; font-size: 18px; letter-spacing: 1px; }
         
-        .custom-select-wrapper { position: relative; width: 100%; }
-        .custom-select-input { cursor: text; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 8px center; padding-right: 20px; }
-        .custom-options { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--primary); border-top: 0; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none; }
+        /* 表格样式 */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #eee; font-size: 13px; white-space: nowrap; }
+        th { background: #f8f9fa; font-weight: 600; color: #555; position: sticky; top: 0; z-index: 10; }
+        
+        /* 输入框样式 */
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; text-align: center; transition: all 0.2s; }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,117,252,0.15); background: #fff; }
+        input[readonly] { background: #f0f2f5; color: #666; cursor: not-allowed; border-color: #eee; }
+        
+        /* 下拉搜索组件 */
+        .custom-select-wrapper { position: relative; width: 140px; margin: 0 auto; }
+        .custom-select-input { cursor: text; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 10px center; padding-right: 25px; text-align: left; }
+        .custom-options { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--primary); border-top: 0; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: 0 8px 16px rgba(0,0,0,0.15); border-radius: 0 0 6px 6px; display: none; }
         .custom-select-wrapper.open .custom-options { display: block; }
-        .custom-option { padding: 8px; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
+        .custom-option { padding: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; text-align: left; }
         .custom-option:hover { background: #eef2ff; color: var(--primary); }
-        .weight-tag { font-size: 10px; background: #eee; padding: 1px 4px; border-radius: 3px; }
-        .no-results { padding: 8px; text-align: center; color: #999; font-style: italic; display: none; }
+        .weight-tag { font-size: 11px; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; }
+        .no-results { padding: 10px; text-align: center; color: #999; font-style: italic; display: none; }
+
+        /* 数据单元格样式 */
+        .profit-cell { font-weight: bold; font-size: 14px; color: var(--success); }
+        .loss { color: var(--danger); }
+        .rate-cell { font-size: 12px; color: #666; }
+        .rate-high { color: var(--success); font-weight: bold; }
+        .rate-low { color: var(--warn); }
         
-        .profit-cell { font-weight: bold; font-size: 13px; }
-        .status-ok { color: var(--success); }
-        .status-warn { color: #f57c00; }
-        .status-error { color: var(--danger); }
+        /* 按钮样式 */
+        .btn-add { background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; margin: 15px auto; display: block; box-shadow: 0 4px 6px rgba(37,117,252,0.2); transition: transform 0.1s; }
+        .btn-add:active { transform: scale(0.98); }
+        .btn-del { background: #ffebee; color: var(--danger); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.2s; }
+        .btn-del:hover { background: #ffcdd2; }
         
-        .btn-add { background: var(--primary); color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 13px; margin: 10px auto; display: block; }
-        .btn-del { background: #ff5252; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .footer { text-align: center; padding: 10px; font-size: 11px; color: #666; background: #f8f9fa; }
-        .note { font-size: 11px; color: #666; text-align: center; padding: 8px; background: #fff3cd; border-bottom: 1px solid #eee; }
+        .footer { text-align: center; padding: 15px; font-size: 12px; color: #888; background: #fafafa; border-top: 1px solid #eee; }
+        .note { background: #e3f2fd; color: #1565c0; padding: 10px; font-size: 12px; text-align: center; border-bottom: 1px solid #bbdefb; }
+        
+        /* 合计栏 */
+        .summary-bar {
+            background: #fff;
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+            border-top: 2px solid #f0f0f0;
+            font-size: 14px;
+        }
+        .summary-item strong { display: block; font-size: 16px; margin-top: 4px; }
+        .sum-profit { color: var(--success); }
+        .sum-cost { color: var(--text); }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🧊 三国冰河·跑商计算器 (精准版)</h1>
-        <div class="note">💡 <strong>用法：</strong>如果自动计算的利润不对，请在“交易数量”栏<strong>手动填入</strong>游戏里实际能买的数量。</div>
-        <table id="tradingTable">
-            <thead>
-                <tr>
-                    <th style="width: 12%;">商品</th>
-                    <th style="width: 8%;">买入</th>
-                    <th style="width: 8%;">卖出</th>
-                    <th style="width: 8%;">已占</th>
-                    <th style="width: 8%;">总重</th>
-                    <th style="width: 8%;">单重</th>
-                    <th style="width: 10%;">交易数量<br><span style="font-weight:normal;font-size:10px;color:#888">(留空=自动算)</span></th>
-                    <th style="width: 8%;">税率</th>
-                    <th style="width: 12%;">预计利润</th>
-                    <th style="width: 8%;">状态</th>
-                    <th style="width: 8%;">操作</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+        <h1>🧊 三国冰河·极简跑商计算器</h1>
+        <div class="note">💡 提示：输入拼音首字母快速搜索 (如 "tks"=铜矿石)。自动计算总成本和利润率。</div>
+        
+        <div class="table-wrapper">
+            <table id="tradingTable">
+                <thead>
+                    <tr>
+                        <th style="width: 18%;">商品</th>
+                        <th style="width: 12%;">买入价</th>
+                        <th style="width: 12%;">卖出价</th>
+                        <th style="width: 12%;">数量</th>
+                        <th style="width: 12%;">总成本</th>
+                        <th style="width: 12%;">利润率</th>
+                        <th style="width: 14%;">净利润</th>
+                        <th style="width: 8%;">操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="summary-bar">
+            <div class="summary-item">总成本<strong class="sum-cost" id="totalCost">0</strong></div>
+            <div class="summary-item">总利润<strong class="sum-profit" id="totalProfit">0</strong></div>
+        </div>
+
         <button class="btn-add" onclick="addRow()">+ 添加一行</button>
-        <div class="footer">输入拼音首字母搜索 (如 "tks"=铜矿石)</div>
+        <div class="footer">数据仅供规划参考，实际交易请以游戏内为准</div>
     </div>
 
     <script>
+        // 商品数据库
         const products = [
             {n:"黏土",w:15,p:"nian tu"}, {n:"棉花",w:13,p:"mian hua"}, {n:"茶叶",w:13,p:"cha ye"},
             {n:"铁矿石",w:34,p:"tie kuang shi"}, {n:"铜矿石",w:35,p:"tong kuang shi"}, {n:"谷物",w:10,p:"gu wu"},
@@ -75,67 +108,112 @@
         ];
 
         window.onload = () => {
-            // 示例：谷物，手动填入数量 742 来匹配游戏数据
-            addRow("谷物", 14.1, 17.6, 0, 6000, 742, 0.2); 
-            addRow("茶叶", 58.4, 73.1, 247, 7000, "", 0.1);
+            addRow("谷物", 14.1, 17.6, 100); 
+            addRow("茶叶", 58.4, 73.1, 50);
+            updateSummary();
         };
 
-        function addRow(defName="", buy="", sell="", used="", max="", qty="", taxVal="") {
+        function addRow(defName="", buy="", sell="", qty="") {
             const tbody = document.querySelector('#tradingTable tbody');
             const tr = document.createElement('tr');
             
-            let taxOpts = `<option value="0">0%</option>`;
-            for(let i=10; i<=90; i++) taxOpts += `<option value="${i/100}" ${i/100==taxVal?'selected':''}>${i}%</option>`;
-
             tr.innerHTML = `
-                <td><div class="custom-select-wrapper" data-def="${defName}"><input type="text" class="custom-select-input" placeholder="搜..." autocomplete="off"><div class="custom-options"></div></div></td>
-                <td><input type="number" class="buy-price" value="${buy}" step="0.1"></td>
-                <td><input type="number" class="sell-price" value="${sell}" step="0.1"></td>
-                <td><input type="number" class="used-weight" value="${used}"></td>
-                <td><input type="number" class="max-weight" value="${max}"></td>
-                <td><input type="number" class="item-weight" value="" readonly style="background:#f0f0f0;"></td>
-                <td><input type="number" class="plan-qty" value="${qty}" placeholder="自动" step="1"></td>
-                <td><select class="tax-rate">${taxOpts}</select></td>
-                <td class="profit-cell">0.00</td>
-                <td class="status-cell">-</td>
-                <td><button class="btn-del" onclick="this.closest('tr').remove();if(!document.querySelectorAll('tbody tr').length)addRow();">×</button></td>
+                <td>
+                    <div class="custom-select-wrapper" data-def="${defName}">
+                        <input type="text" class="custom-select-input" placeholder="搜商品..." autocomplete="off">
+                        <div class="custom-options"></div>
+                    </div>
+                </td>
+                <td><input type="number" class="buy-price" value="${buy}" step="0.1" placeholder="0"></td>
+                <td><input type="number" class="sell-price" value="${sell}" step="0.1" placeholder="0"></td>
+                <td><input type="number" class="plan-qty" value="${qty}" step="1" placeholder="0"></td>
+                <td><input type="text" class="cost-display" readonly value="0"></td>
+                <td><div class="rate-cell">-</div></td>
+                <td><div class="profit-cell">0.00</div></td>
+                <td><button class="btn-del" onclick="removeRow(this)">×</button></td>
             `;
             tbody.appendChild(tr);
+            
             initSelect(tr.querySelector('.custom-select-wrapper'));
+            
             if(defName) setTimeout(()=>{
                 const inp = tr.querySelector('.custom-select-input');
                 inp.value = defName;
                 selectOpt(tr.querySelector('.custom-select-wrapper'), defName, true);
             }, 0);
-            tr.querySelectorAll('input,select').forEach(i=>i.addEventListener('input',()=>calc(tr)));
+            
+            // 绑定输入事件
+            tr.querySelectorAll('input').forEach(i => {
+                i.addEventListener('input', () => {
+                    calcRow(tr);
+                    updateSummary();
+                });
+            });
+            
+            calcRow(tr);
+        }
+
+        function removeRow(btn) {
+            const rows = document.querySelectorAll('#tradingTable tbody tr');
+            if (rows.length > 1) {
+                btn.closest('tr').remove();
+                updateSummary();
+            } else {
+                // 如果只剩一行，清空数据而不是删除
+                const row = btn.closest('tr');
+                row.querySelectorAll('input').forEach(i => {
+                    if(!i.readOnly) i.value = '';
+                    if(i.classList.contains('custom-select-input')) i.value = '';
+                });
+                calcRow(row);
+                updateSummary();
+            }
         }
 
         function initSelect(wrap) {
             const inp = wrap.querySelector('.custom-select-input');
             const optsDiv = wrap.querySelector('.custom-options');
             const row = wrap.closest('tr');
-            const wInp = row.querySelector('.item-weight');
             
             products.forEach(prod => {
                 const d = document.createElement('div');
                 d.className = 'custom-option';
                 d.innerHTML = `<span>${prod.n}</span><span class="weight-tag">${prod.w}</span>`;
-                d.dataset.v = prod.n; d.dataset.w = prod.w; d.dataset.p = prod.p;
+                d.dataset.v = prod.n;
+                d.dataset.p = prod.p;
                 optsDiv.appendChild(d);
             });
-            const noRes = document.createElement('div'); noRes.className='no-results'; noRes.textContent='无匹配'; optsDiv.appendChild(noRes);
-
-            inp.addEventListener('focus', e=>{ e.stopPropagation(); closeAll(); wrap.classList.add('open'); filter(inp.value, optsDiv, noRes); });
-            inp.addEventListener('input', e=>{ e.stopPropagation(); wrap.classList.add('open'); filter(inp.value, optsDiv, noRes); });
-            optsDiv.addEventListener('mousedown', e=>{
-                e.preventDefault();
-                const t = e.target.classList.contains('custom-option')?e.target:e.target.parentElement;
-                if(t.classList.contains('custom-option')) selectOpt(wrap, t.dataset.v, true);
-            });
-            document.addEventListener('click', e=>{ if(!wrap.contains(e.target)) wrap.classList.remove('open'); });
             
-            wInp.addEventListener('focus', function(){ this.style.background='#fff'; this.style.borderColor='#ffa000'; });
-            wInp.addEventListener('blur', function(){ if(!this.value) this.style.background='#f0f0f0'; });
+            const noRes = document.createElement('div'); 
+            noRes.className='no-results'; 
+            noRes.textContent='无匹配商品'; 
+            optsDiv.appendChild(noRes);
+
+            inp.addEventListener('focus', e => { 
+                e.stopPropagation(); 
+                closeAll(); 
+                wrap.classList.add('open'); 
+                filter(inp.value, optsDiv, noRes); 
+            });
+            inp.addEventListener('input', e => { 
+                e.stopPropagation(); 
+                wrap.classList.add('open'); 
+                filter(inp.value, optsDiv, noRes); 
+            });
+            
+            optsDiv.addEventListener('mousedown', e => {
+                e.preventDefault();
+                const t = e.target.classList.contains('custom-option') ? e.target : e.target.parentElement;
+                if(t.classList.contains('custom-option')) {
+                    selectOpt(wrap, t.dataset.v, true);
+                    calcRow(row);
+                    updateSummary();
+                }
+            });
+            
+            document.addEventListener('click', e => { 
+                if(!wrap.contains(e.target)) wrap.classList.remove('open'); 
+            });
         }
 
         function filter(q, container, noRes) {
@@ -152,65 +230,54 @@
 
         function selectOpt(wrap, val, force) {
             const inp = wrap.querySelector('.custom-select-input');
-            const row = wrap.closest('tr');
-            const wInp = row.querySelector('.item-weight');
-            const prod = products.find(x=>x.n===val);
-            inp.value = val; wrap.classList.remove('open');
-            wrap.querySelectorAll('.custom-option').forEach(o=>o.classList.toggle('selected', o.dataset.v===val));
-            if(prod && force) {
-                wInp.value = prod.w;
-                wInp.style.background = '#e8f5e9';
-                setTimeout(()=>{ if(document.activeElement!==wInp) wInp.style.background='#f0f0f0'; }, 500);
-                calc(row);
-            }
+            inp.value = val; 
+            wrap.classList.remove('open');
+            wrap.querySelectorAll('.custom-option').forEach(o => {
+                o.classList.toggle('selected', o.dataset.v === val);
+            });
         }
 
-        function closeAll() { document.querySelectorAll('.custom-select-wrapper').forEach(w=>w.classList.remove('open')); }
+        function closeAll() { 
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open')); 
+        }
 
-        function calc(row) {
-            const b = parseFloat(row.querySelector('.buy-price').value)||0;
-            const s = parseFloat(row.querySelector('.sell-price').value)||0;
-            const u = parseFloat(row.querySelector('.used-weight').value)||0;
-            const m = parseFloat(row.querySelector('.max-weight').value)||0;
-            let w = parseFloat(row.querySelector('.item-weight').value);
-            const t = parseFloat(row.querySelector('.tax-rate').value)||0;
-            const qtyInput = row.querySelector('.plan-qty').value.trim();
+        function calcRow(row) {
+            const buy = parseFloat(row.querySelector('.buy-price').value) || 0;
+            const sell = parseFloat(row.querySelector('.sell-price').value) || 0;
+            const qty = parseInt(row.querySelector('.plan-qty').value) || 0;
             
-            if(!w) w=1;
+            const cost = buy * qty;
+            const profit = (sell - buy) * qty;
+            const rate = cost > 0 ? (profit / cost) * 100 : 0;
             
-            let quantity = 0;
-            let statusMsg = "";
-            let statusClass = "status-ok";
-
-            if (qtyInput === "") {
-                // 模式A：自动计算 (总重 - 已占) / 单重
-                const avail = Math.max(0, m - u);
-                quantity = Math.floor(avail / w);
-                statusMsg = `自动 (${quantity}个)`;
-                if (quantity === 0 && avail > 0) statusMsg = "单重过大";
-            } else {
-                // 模式B：按用户输入的数量
-                quantity = parseInt(qtyInput);
-                const totalWeight = quantity * w;
-                if (totalWeight + u > m) {
-                    statusMsg = `超重! (${totalWeight+u}/${m})`;
-                    statusClass = "status-error";
-                } else {
-                    const usage = (((totalWeight+u)/m)*100).toFixed(1);
-                    statusMsg = `占用 ${usage}%`;
-                    statusClass = "status-ok";
-                }
-            }
-
-            const profit = (s - b) * quantity * (1 - t);
+            row.querySelector('.cost-display').value = cost.toLocaleString('zh-CN', {maximumFractionDigits: 1});
+            
             const profitCell = row.querySelector('.profit-cell');
-            const statusCell = row.querySelector('.status-cell');
+            profitCell.textContent = profit.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            profitCell.className = 'profit-cell ' + (profit >= 0 ? '' : 'loss');
             
-            profitCell.textContent = profit.toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
-            profitCell.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+            const rateCell = row.querySelector('.rate-cell');
+            rateCell.textContent = rate.toFixed(1) + '%';
+            rateCell.className = 'rate-cell ' + (rate >= 20 ? 'rate-high' : (rate < 0 ? 'loss' : 'rate-low'));
+        }
+
+        function updateSummary() {
+            let totalCost = 0;
+            let totalProfit = 0;
             
-            statusCell.textContent = statusMsg;
-            statusCell.className = "status-cell " + statusClass;
+            document.querySelectorAll('#tradingTable tbody tr').forEach(row => {
+                const buy = parseFloat(row.querySelector('.buy-price').value) || 0;
+                const sell = parseFloat(row.querySelector('.sell-price').value) || 0;
+                const qty = parseInt(row.querySelector('.plan-qty').value) || 0;
+                
+                totalCost += buy * qty;
+                totalProfit += (sell - buy) * qty;
+            });
+            
+            document.getElementById('totalCost').textContent = totalCost.toLocaleString('zh-CN', {maximumFractionDigits: 0});
+            const profitEl = document.getElementById('totalProfit');
+            profitEl.textContent = totalProfit.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            profitEl.style.color = totalProfit >= 0 ? 'var(--success)' : 'var(--danger)';
         }
     </script>
 </body>

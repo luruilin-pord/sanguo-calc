@@ -36,10 +36,11 @@
         input { width: 90%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; background: #fff; }
         .best-row { background: #e8f5e9 !important; border-left: 5px solid #2e7d32; }
         
-        .btn-group { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
         .btn { padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; color: #fff; transition: opacity 0.2s; }
         .btn-primary { background: var(--primary); }
         .btn-manual { background: #78909c; }
+        .btn-clear { background: #f44336; }
         .btn:hover { opacity: 0.9; }
         .btn:disabled { background: #ccc; cursor: not-allowed; }
 
@@ -76,7 +77,8 @@
 
     <div class="btn-group">
         <button class="btn btn-primary" id="btnAnalyze" onclick="processImages()" disabled>🚀 开始 AI 识别与分析</button>
-        <button class="btn btn-manual" onclick="enableManualMode()">✏️ 切换手动录入模式</button>
+        <button class="btn btn-manual" onclick="enableManualMode()">✏️ 手动录入模式</button>
+        <button class="btn btn-clear" onclick="clearAllData()">🗑️ 清空所有数据</button>
     </div>
 
     <!-- 数据表格 -->
@@ -102,6 +104,7 @@
         </div>
         <div class="btn-group">
             <button class="btn btn-primary" onclick="analyzeData()">📊 生成最终报告</button>
+            <button class="btn btn-clear" onclick="clearAllData()">🗑️ 清空并重新开始</button>
         </div>
     </div>
 
@@ -111,6 +114,9 @@
         <div id="analysisContent"></div>
         <div class="chart-container">
             <canvas id="trendChart"></canvas>
+        </div>
+        <div class="btn-group" style="margin-top:20px;">
+            <button class="btn btn-clear" onclick="clearAllData()">🗑️ 清空并上传新图</button>
         </div>
     </div>
 </div>
@@ -141,11 +147,9 @@
         if (files.length === 0) return;
         if (files.length > 2) { alert("最多上传 2 张"); return; }
 
-        // 清空旧数据
-        rawData = [];
-        topInfo = { money: 0, weightUsed: 0, weightTotal: 0, taxRate: 0 };
-        document.getElementById('dataSection').style.display = 'none';
-        document.getElementById('resultSection').style.display = 'none';
+        // 清空旧数据（双重保险）
+        clearAllDataSilent();
+
         statusBox.style.display = 'block';
         statusBox.innerHTML = '<span class="loader"></span> 正在上传图片...';
 
@@ -159,10 +163,9 @@
             previewContainer.appendChild(img);
         }
 
-        // 立即开始处理
-        setTimeout(() => {
-            processImages();
-        }, 500);
+        // 启用分析按钮
+        document.getElementById('btnAnalyze').disabled = false;
+        statusBox.innerHTML = '✅ 图片已上传，请点击“开始 AI 识别与分析”';
     }
 
     // 主要处理函数
@@ -173,14 +176,11 @@
             return;
         }
 
-        // 为了演示，我们使用一个简单的正则表达式来“模拟”OCR
-        // 在实际应用中，这里应该调用 Google Vision API 或 Gemini API
-        const files = Array.from(document.getElementById('fileInput').files);
-        if (files.length === 0) return;
-
         try {
-            // 模拟从图片中提取文本
-            const extractedText = await simulateOCR(files[0]);
+            statusBox.innerHTML = '<span class="loader"></span> 正在调用 AI 视觉识别...';
+            
+            // 模拟 OCR（实际应替换为真实 API 调用）
+            const extractedText = await simulateOCR();
             parseResult(extractedText);
             
             statusBox.innerHTML = '<span style="color:green;">✅ 图片识别完成！请检查数据并点击“生成最终报告”</span>';
@@ -193,9 +193,8 @@
     }
 
     // 模拟 OCR 提取文本（仅用于演示）
-    async function simulateOCR(file) {
-        // 这里应该调用真实的 AI API
-        // 为了演示，我们返回一个固定的字符串
+    async function simulateOCR() {
+        // 实际项目中这里应调用 Google Vision API
         return `
 金钱: 3.7万
 负重: 260/8000
@@ -242,21 +241,14 @@
                     source: "截图"
                 };
                 
-                // 查找买入价
                 const priceMatch = line.match(/买入价格\s*(\d+\.?\d*)/);
                 if (priceMatch) currentItem.buyPrice = parseFloat(priceMatch[1]);
 
-                // 查找传闻
                 const rumorMatch = line.match(/传闻\d+:据说\[(.*?)\]的卖出价格为(\d+\.?\d*)/);
                 if (rumorMatch) {
                     const sellCity = rumorMatch[1];
                     const sellPrice = parseFloat(rumorMatch[2]);
-                    
-                    rawData.push({
-                        ...currentItem,
-                        sellCity: sellCity,
-                        sellPrice: sellPrice
-                    });
+                    rawData.push({ ...currentItem, sellCity, sellPrice });
                 }
             }
         });
@@ -300,14 +292,13 @@
     function analyzeData() {
         if (rawData.length === 0) return alert("没有数据");
 
-        // 计算最优路线
         const bestRoutes = [...rawData].sort((a, b) => b.sellPrice - a.sellPrice);
 
         let analysisHtml = `<div class="highlight">🎯 最佳跑商方案：</div>`;
         analysisHtml += `<ul>`;
         bestRoutes.slice(0, 3).forEach(r => {
             const profitPerUnit = r.sellPrice - r.buyPrice;
-            const maxBuy = Math.floor(topInfo.weightTotal / 15); // 假设每单位负重 15
+            const maxBuy = Math.floor(topInfo.weightTotal / 15);
             const totalProfit = profitPerUnit * maxBuy * (1 - topInfo.taxRate);
             analysisHtml += `<li><strong>${r.name}</strong>: ${r.buyCity} → ${r.sellCity} (${profitPerUnit.toFixed(1)}金/件)<br>可购买: ${maxBuy} 件 | 总利润: ${totalProfit.toFixed(1)}金</li>`;
         });
@@ -364,9 +355,39 @@
         });
     }
 
-    // 手动录入模式（备用）
+    // ✅ 新增：清空所有数据
+    function clearAllData() {
+        if (confirm("确定要清空所有数据并重新开始吗？")) {
+            clearAllDataSilent();
+            alert("✅ 所有数据已清空，现在可以上传新截图了！");
+        }
+    }
+
+    // 内部静默清空函数
+    function clearAllDataSilent() {
+        // 清空全局数据
+        rawData = [];
+        topInfo = { money: 0, weightUsed: 0, weightTotal: 0, taxRate: 0 };
+        
+        // 重置界面
+        document.getElementById('previewContainer').innerHTML = '';
+        document.getElementById('dataSection').style.display = 'none';
+        document.getElementById('resultSection').style.display = 'none';
+        document.getElementById('statusBox').style.display = 'none';
+        document.getElementById('btnAnalyze').disabled = true;
+        
+        // 重置文件输入（关键！允许重复选择同一文件）
+        document.getElementById('fileInput').value = '';
+        
+        // 销毁图表
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+    }
+
     function enableManualMode() {
-        alert("手动录入模式即将开发中，目前请使用 AI 识别");
+        alert("手动录入模式将在后续版本中完善。当前建议使用 AI 识别 + 手动校对表格中的数据。");
     }
 </script>
 

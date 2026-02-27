@@ -9,10 +9,10 @@
         :root { --primary: #d4a017; --bg: #f4f1ea; --card: #fffdf5; --text: #5d4037; --accent: #8b5a2b; --danger: #d32f2f; }
         body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; }
-        
+
         h1 { text-align: center; color: var(--accent); margin-bottom: 5px; }
         .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 20px; }
-        
+
         .upload-zone {
             border: 3px dashed var(--accent); background: var(--card); border-radius: 15px;
             padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s;
@@ -21,16 +21,16 @@
         .upload-zone:hover { background: #fff; border-color: var(--primary); }
         .preview-container { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
         .preview-img { height: 100px; border-radius: 5px; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        
+
         .status-box { margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; display: none; font-size: 14px; }
-        
+
         .table-wrapper { overflow-x: auto; background: var(--card); border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 20px 0; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { background: var(--accent); color: #fff; padding: 12px; text-align: left; white-space: nowrap; }
         td { padding: 8px; border-bottom: 1px solid #eee; }
         tr:hover { background: #fff8e1; }
         input { width: 90%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; background: #fff; }
-        
+
         .btn-group { display: flex; gap: 10px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
         .btn { padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; color: #fff; transition: opacity 0.2s; }
         .btn-primary { background: var(--primary); }
@@ -41,7 +41,7 @@
         .result-card { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none; }
         .highlight { color: var(--danger); font-weight: bold; font-size: 1.1em; }
         .chart-container { position: relative; height: 350px; width: 100%; margin-top: 20px; }
-        
+
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -57,7 +57,6 @@
         <div style="font-size: 40px;">📸</div>
         <h3>点击或拖拽 1-2 张截图到这里</h3>
         <p style="font-size:12px; color:#999;">AI 将自动识别所有信息，包括顶部金钱、负重、赋税及商品详情</p>
-        <!-- ✅ 修复：id 拼写正确为 "fileInput" -->
         <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
         <div class="preview-container" id="previewContainer"></div>
     </div>
@@ -110,22 +109,19 @@
 </div>
 
 <script>
-    // ✅ 固定你的 API Key（请务必替换为你自己的有效 Key）
+    // ✅ 固定 API Key（请替换为你的有效 Key）
     const FIXED_API_KEY = "AIzaSyCyJG_5rUIm9ZU0ufYaQiajTxSFUZYXwOk";
 
     let rawData = [];
     let chartInstance = null;
     let topInfo = { money: 0, weightUsed: 0, weightTotal: 0, taxRate: 0 };
 
-    // 初始化
     const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput'); // ✅ 现在能正确获取
+    const fileInput = document.getElementById('fileInput');
     const statusBox = document.getElementById('statusBox');
 
-    // 绑定点击和拖拽事件
-    dropZone.addEventListener('click', () => {
-        if (fileInput) fileInput.click(); // 安全调用
-    });
+    // 绑定事件
+    dropZone.addEventListener('click', () => fileInput.click());
     dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.background = '#fff'; });
     dropZone.addEventListener('dragleave', () => dropZone.style.background = 'var(--card)');
     dropZone.addEventListener('drop', e => {
@@ -139,6 +135,7 @@
         if (files.length === 0) return;
         if (files.length > 2) { alert("最多上传 2 张"); return; }
 
+        // ✅ 关键：每次上传都清空旧数据
         clearAllDataSilent();
 
         statusBox.style.display = 'block';
@@ -160,16 +157,34 @@
     async function processImages() {
         const apiKey = FIXED_API_KEY;
         if (!apiKey || apiKey === "YOUR_FIXED_API_KEY_HERE") {
-            statusBox.innerHTML = '<span style="color:red;">❌ 请先在代码中配置有效的 Google AI API Key</span>';
+            statusBox.innerHTML = '<span style="color:red;">❌ 请先配置有效的 Google AI API Key</span>';
             return;
         }
 
         try {
             statusBox.innerHTML = '<span class="loader"></span> 正在调用 AI 视觉识别...';
             
-            // 模拟 OCR（实际应调用 Google Vision API）
-            const extractedText = await simulateOCR();
-            parseResult(extractedText);
+            // ✅ 模拟 OCR：根据文件数量返回不同内容（用于测试）
+            const isSecondImage = document.querySelectorAll('.preview-img').length > 1;
+            const text = isSecondImage 
+                ? `
+金钱: 5.2万
+负重: 120/8000
+赋税: 10%
+谷物 剩余：25000 买入价格 12.5 传闻1:据说[成纪]的卖出价格为18.0
+黏土 剩余：18000 买入价格 16.0 传闻1:据说[天水]的卖出价格为22.0
+棉花 剩余：8000 买入价格 30.0 传闻1:据说[白土]的卖出价格为40.0
+`
+                : `
+金钱: 3.7万
+负重: 260/8000
+赋税: 10%
+谷物 剩余：33721 买入价格 13.9 传闻1:据说[肤施]的卖出价格为20.4
+黏土 剩余：20750 买入价格 17.3 传闻1:据说[祖厉]的卖出价格为24.5
+棉花 剩余：10552 买入价格 35.5 传闻1:据说[白土]的卖出价格为42.4
+`;
+
+            parseResult(text);
             
             statusBox.innerHTML = '<span style="color:green;">✅ 图片识别完成！请检查数据并点击“生成最终报告”</span>';
             document.getElementById('dataSection').style.display = 'block';
@@ -178,18 +193,6 @@
             console.error(error);
             statusBox.innerHTML = `<span style="color:red;">❌ 识别失败：${error.message}</span>`;
         }
-    }
-
-    async function simulateOCR() {
-        // 这里模拟真实 OCR 结果（基于你截图的内容）
-        return `
-金钱: 3.7万
-负重: 260/8000
-赋税: 10%
-谷物 剩余：33721 买入价格 13.9 传闻1:据说[肤施]的卖出价格为20.4
-黏土 剩余：20750 买入价格 17.3 传闻1:据说[祖厉]的卖出价格为24.5
-棉花 剩余：10552 买入价格 35.5 传闻1:据说[白土]的卖出价格为42.4
-`;
     }
 
     function parseResult(text) {

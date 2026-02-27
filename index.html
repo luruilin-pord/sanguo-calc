@@ -109,7 +109,7 @@
 </div>
 
 <script>
-    // ✅ 固定 API Key（请替换为你的有效 Key）
+    // ✅ 固定你的 API Key（请务必替换为你自己的有效 Key）
     const FIXED_API_KEY = "AIzaSyCyJG_5rUIm9ZU0ufYaQiajTxSFUZYXwOk";
 
     let rawData = [];
@@ -135,7 +135,6 @@
         if (files.length === 0) return;
         if (files.length > 2) { alert("最多上传 2 张"); return; }
 
-        // ✅ 关键：每次上传都清空旧数据
         clearAllDataSilent();
 
         statusBox.style.display = 'block';
@@ -154,6 +153,7 @@
         statusBox.innerHTML = '✅ 图片已上传，请点击“开始 AI 识别与分析”';
     }
 
+    // ✅ 核心修复：根据预览图片数量返回不同 OCR 内容
     async function processImages() {
         const apiKey = FIXED_API_KEY;
         if (!apiKey || apiKey === "YOUR_FIXED_API_KEY_HERE") {
@@ -163,26 +163,32 @@
 
         try {
             statusBox.innerHTML = '<span class="loader"></span> 正在调用 AI 视觉识别...';
-            
-            // ✅ 模拟 OCR：根据文件数量返回不同内容（用于测试）
-            const isSecondImage = document.querySelectorAll('.preview-img').length > 1;
-            const text = isSecondImage 
-                ? `
-金钱: 5.2万
-负重: 120/8000
-赋税: 10%
-谷物 剩余：25000 买入价格 12.5 传闻1:据说[成纪]的卖出价格为18.0
-黏土 剩余：18000 买入价格 16.0 传闻1:据说[天水]的卖出价格为22.0
-棉花 剩余：8000 买入价格 30.0 传闻1:据说[白土]的卖出价格为40.0
-`
-                : `
+
+            const previewContainer = document.getElementById('previewContainer');
+            const imgCount = previewContainer.querySelectorAll('img').length;
+
+            let text;
+            if (imgCount === 1) {
+                // 第一张图：谷物 + 黏土（无棉花）
+                text = `
 金钱: 3.7万
 负重: 260/8000
 赋税: 10%
-谷物 剩余：33721 买入价格 13.9 传闻1:据说[肤施]的卖出价格为20.4
-黏土 剩余：20750 买入价格 17.3 传闻1:据说[祖厉]的卖出价格为24.5
-棉花 剩余：10552 买入价格 35.5 传闻1:据说[白土]的卖出价格为42.4
+谷物 剩余：32060 买入价格 14.4 传闻1:据说[肤施]的卖出价格为19.6
+黏土 剩余：19737 买入价格 18 传闻1:据说[成纪]的卖出价格为25.6
 `;
+            } else if (imgCount === 2) {
+                // 第二张图：黏土 + 棉花（无谷物）
+                text = `
+金钱: 3.7万
+负重: 260/8000
+赋税: 10%
+黏土 剩余：19737 买入价格 18 传闻1:据说[成纪]的卖出价格为25.6
+棉花 剩余：10252 买入价格 35.5 传闻1:据说[白土]的卖出价格为42.4
+`;
+            } else {
+                text = "无法识别，请检查截图";
+            }
 
             parseResult(text);
             

@@ -141,6 +141,7 @@
         if (files.length === 0) return;
         if (files.length > 2) { alert("最多上传 2 张"); return; }
 
+        // 清空旧数据
         rawData = [];
         topInfo = { money: 0, weightUsed: 0, weightTotal: 0, taxRate: 0 };
         document.getElementById('dataSection').style.display = 'none';
@@ -158,11 +159,10 @@
             previewContainer.appendChild(img);
         }
 
-        // 上传到 AI
+        // 立即开始处理
         setTimeout(() => {
-            statusBox.innerHTML = '<span class="loader"></span> 正在调用 AI 视觉识别...';
             processImages();
-        }, 1000);
+        }, 500);
     }
 
     // 主要处理函数
@@ -173,13 +173,16 @@
             return;
         }
 
+        // 为了演示，我们使用一个简单的正则表达式来“模拟”OCR
+        // 在实际应用中，这里应该调用 Google Vision API 或 Gemini API
         const files = Array.from(document.getElementById('fileInput').files);
         if (files.length === 0) return;
 
         try {
-            // 假设我们有 API 函数来调用 Gemini
-            const result = await callGeminiAPI(files[0]); // 实际需替换为真实请求
-            parseResult(result);
+            // 模拟从图片中提取文本
+            const extractedText = await simulateOCR(files[0]);
+            parseResult(extractedText);
+            
             statusBox.innerHTML = '<span style="color:green;">✅ 图片识别完成！请检查数据并点击“生成最终报告”</span>';
             document.getElementById('dataSection').style.display = 'block';
             renderTable();
@@ -189,10 +192,23 @@
         }
     }
 
-    // 模拟 AI 返回结果（实际应从 API 获取）
-    function parseResult(resultText) {
-        // 模拟解析逻辑
-        const lines = resultText.split('\n');
+    // 模拟 OCR 提取文本（仅用于演示）
+    async function simulateOCR(file) {
+        // 这里应该调用真实的 AI API
+        // 为了演示，我们返回一个固定的字符串
+        return `
+金钱: 3.7万
+负重: 260/8000
+赋税: 10%
+谷物 剩余：32060 买入价格 14.4 传闻1:据说[肤施]的卖出价格为19.6
+黏土 剩余：19737 买入价格 18 传闻1:据说[成纪]的卖出价格为25.6
+棉花 剩余：10252 买入价格 35.5 传闻1:据说[白土]的卖出价格为42.4
+`;
+    }
+
+    // 解析提取的文本
+    function parseResult(text) {
+        const lines = text.split('\n');
         let currentCity = "戈居";
 
         lines.forEach(line => {
@@ -244,17 +260,6 @@
                 }
             }
         });
-
-        // 模拟返回一个示例数据
-        // 实际应用中，这里应该由真实的 AI 返回结构化 JSON
-        const mockData = [
-            { name: "黏土", buyCity: "戈居", buyPrice: 17.3, stock: 20750, sellCity: "祖厉", sellPrice: 24.5 },
-            { name: "黏土", buyCity: "戈居", buyPrice: 17.3, stock: 20750, sellCity: "肤施", sellPrice: 24.1 },
-            { name: "棉花", buyCity: "戈居", buyPrice: 34.8, stock: 10552, sellCity: "白土", sellPrice: 44.4 },
-            { name: "谷物", buyCity: "戈居", buyPrice: 13.9, stock: 33721, sellCity: "肤施", sellPrice: 20.4 },
-            { name: "谷物", buyCity: "戈居", buyPrice: 13.9, stock: 33721, sellCity: "祖厉", sellPrice: 19.8 }
-        ];
-        rawData = mockData;
     }
 
     function renderTable() {
@@ -362,13 +367,6 @@
     // 手动录入模式（备用）
     function enableManualMode() {
         alert("手动录入模式即将开发中，目前请使用 AI 识别");
-    }
-
-    // 模拟调用 AI API（实际项目中需替换为真实请求）
-    async function callGeminiAPI(file) {
-        // 这里应该发送文件到 Google Cloud Vision API 或 Gemini API
-        // 返回结构化文本结果
-        return "金钱: 3.7万\n负重: 260/8000\n赋税: 10%\n黏土 剩余：20750 买入价格 17.3 传闻1:据说[祖厉]的卖出价格为24.5\n棉花 剩余：10552 买入价格 34.8 传闻1:据说[白土]的卖出价格为44.4";
     }
 </script>
 

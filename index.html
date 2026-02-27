@@ -2,375 +2,216 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三国冰河·AI 跑商智能分析器</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>三国冰河·跑商计算器 (精准版)</title>
     <style>
-        :root { --primary: #d4a017; --bg: #f4f1ea; --card: #fffdf5; --text: #5d4037; --accent: #8b5a2b; --danger: #d32f2f; }
-        body { font-family: 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: 0 auto; }
-
-        h1 { text-align: center; color: var(--accent); margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 20px; }
-
-        .upload-zone {
-            border: 3px dashed var(--accent); background: var(--card); border-radius: 15px;
-            padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s;
-            position: relative; min-height: 100px;
-        }
-        .upload-zone:hover { background: #fff; border-color: var(--primary); }
-        .preview-container { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
-        .preview-img { height: 100px; border-radius: 5px; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-
-        .status-box { margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; display: none; font-size: 14px; }
-
-        .table-wrapper { overflow-x: auto; background: var(--card); border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin: 20px 0; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        th { background: var(--accent); color: #fff; padding: 12px; text-align: left; white-space: nowrap; }
-        td { padding: 8px; border-bottom: 1px solid #eee; }
-        tr:hover { background: #fff8e1; }
-        input { width: 90%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; background: #fff; }
-
-        .btn-group { display: flex; gap: 10px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
-        .btn { padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; color: #fff; transition: opacity 0.2s; }
-        .btn-primary { background: var(--primary); }
-        .btn-clear { background: #f44336; }
-        .btn:hover { opacity: 0.9; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
-
-        .result-card { background: var(--card); padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none; }
-        .highlight { color: var(--danger); font-weight: bold; font-size: 1.1em; }
-        .chart-container { position: relative; height: 350px; width: 100%; margin-top: 20px; }
-
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        :root { --primary: #2575fc; --bg: #f5f5f5; --text: #333; --success: #2e7d32; --danger: #d32f2f; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
+        .container { max-width: 100%; margin: 0 auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow-x: auto; }
+        h1 { text-align: center; padding: 15px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: #fff; margin: 0; font-size: 18px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 8px 5px; text-align: center; border-bottom: 1px solid #eee; font-size: 12px; }
+        th { background: #f8f9fa; font-weight: 600; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        input, select { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        
+        .custom-select-wrapper { position: relative; width: 100%; }
+        .custom-select-input { cursor: text; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 8px center; padding-right: 20px; }
+        .custom-options { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--primary); border-top: 0; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none; }
+        .custom-select-wrapper.open .custom-options { display: block; }
+        .custom-option { padding: 8px; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
+        .custom-option:hover { background: #eef2ff; color: var(--primary); }
+        .weight-tag { font-size: 10px; background: #eee; padding: 1px 4px; border-radius: 3px; }
+        .no-results { padding: 8px; text-align: center; color: #999; font-style: italic; display: none; }
+        
+        .profit-cell { font-weight: bold; font-size: 13px; }
+        .status-ok { color: var(--success); }
+        .status-warn { color: #f57c00; }
+        .status-error { color: var(--danger); }
+        
+        .btn-add { background: var(--primary); color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 13px; margin: 10px auto; display: block; }
+        .btn-del { background: #ff5252; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .footer { text-align: center; padding: 10px; font-size: 11px; color: #666; background: #f8f9fa; }
+        .note { font-size: 11px; color: #666; text-align: center; padding: 8px; background: #fff3cd; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>🧊 三国冰河·AI 跑商智能分析器</h1>
-    <p class="subtitle">上传截图，AI 自动识别金钱、负重、赋税、商品与传闻，一键规划最优跑商路线</p>
-
-    <!-- 上传区 -->
-    <div class="upload-zone" id="dropZone">
-        <div style="font-size: 40px;">📸</div>
-        <h3>点击或拖拽 1-2 张截图到这里</h3>
-        <p style="font-size:12px; color:#999;">AI 将自动识别所有信息，包括顶部金钱、负重、赋税及商品详情</p>
-        <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
-        <div class="preview-container" id="previewContainer"></div>
+    <div class="container">
+        <h1>🧊 三国冰河·跑商计算器 (精准版)</h1>
+        <div class="note">💡 <strong>用法：</strong>如果自动计算的利润不对，请在“交易数量”栏<strong>手动填入</strong>游戏里实际能买的数量。</div>
+        <table id="tradingTable">
+            <thead>
+                <tr>
+                    <th style="width: 12%;">商品</th>
+                    <th style="width: 8%;">买入</th>
+                    <th style="width: 8%;">卖出</th>
+                    <th style="width: 8%;">已占</th>
+                    <th style="width: 8%;">总重</th>
+                    <th style="width: 8%;">单重</th>
+                    <th style="width: 10%;">交易数量<br><span style="font-weight:normal;font-size:10px;color:#888">(留空=自动算)</span></th>
+                    <th style="width: 8%;">税率</th>
+                    <th style="width: 12%;">预计利润</th>
+                    <th style="width: 8%;">状态</th>
+                    <th style="width: 8%;">操作</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <button class="btn-add" onclick="addRow()">+ 添加一行</button>
+        <div class="footer">输入拼音首字母搜索 (如 "tks"=铜矿石)</div>
     </div>
 
-    <div class="status-box" id="statusBox"></div>
+    <script>
+        const products = [
+            {n:"黏土",w:15,p:"nian tu"}, {n:"棉花",w:13,p:"mian hua"}, {n:"茶叶",w:13,p:"cha ye"},
+            {n:"铁矿石",w:34,p:"tie kuang shi"}, {n:"铜矿石",w:35,p:"tong kuang shi"}, {n:"谷物",w:10,p:"gu wu"},
+            {n:"葡萄",w:10,p:"pu tao"}, {n:"硬木",w:15,p:"ying mu"}, {n:"药材",w:11,p:"yao cai"},
+            {n:"香料",w:10,p:"xiang liao"}, {n:"毛皮",w:18,p:"mao pi"}, {n:"蜂蜜",w:29,p:"feng mi"},
+            {n:"盐",w:35,p:"yan"}, {n:"米酒",w:30,p:"mi jiu"}, {n:"陶器",w:30,p:"tao qi"},
+            {n:"葡萄酒",w:30,p:"pu tao jiu"}, {n:"兵器",w:52,p:"bing qi"}, {n:"铜器",w:55,p:"tong qi"},
+            {n:"工具",w:50,p:"gong ju"}, {n:"布帛",w:16,p:"bu bo"}, {n:"蜀锦",w:10,p:"shu jin"},
+            {n:"漆器",w:32,p:"qi qi"}, {n:"玉器",w:32,p:"yu qi"}, {n:"海南珍珠",w:12,p:"hai nan zhen zhu"},
+            {n:"金银器",w:27,p:"jin yin qi"}
+        ];
 
-    <div class="btn-group">
-        <button class="btn btn-primary" id="btnAnalyze" onclick="processImages()" disabled>🚀 开始 AI 识别与分析</button>
-        <button class="btn btn-clear" onclick="clearAllData()">🗑️ 清空所有数据</button>
-    </div>
+        window.onload = () => {
+            // 示例：谷物，手动填入数量 742 来匹配游戏数据
+            addRow("谷物", 14.1, 17.6, 0, 6000, 742, 0.2); 
+            addRow("茶叶", 58.4, 73.1, 247, 7000, "", 0.1);
+        };
 
-    <!-- 数据表格 -->
-    <div id="dataSection" style="display:none;">
-        <h3>📝 数据校对 (AI 识别结果，请快速检查)</h3>
-        <div class="table-wrapper">
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th>来源图</th>
-                        <th>商品</th>
-                        <th>当前城</th>
-                        <th>买入价</th>
-                        <th>剩余量</th>
-                        <th>目标城 (传闻)</th>
-                        <th>卖出价</th>
-                        <th>利润率</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-        <div class="btn-group">
-            <button class="btn btn-primary" onclick="analyzeData()">📊 生成最终报告</button>
-            <button class="btn btn-clear" onclick="clearAllData()">🗑️ 清空并重新开始</button>
-        </div>
-    </div>
-
-    <!-- 结果报告 -->
-    <div id="resultSection" class="result-card">
-        <h3>🏆 分析报告</h3>
-        <div id="analysisContent"></div>
-        <div class="chart-container">
-            <canvas id="trendChart"></canvas>
-        </div>
-        <div class="btn-group" style="margin-top:20px;">
-            <button class="btn btn-clear" onclick="clearAllData()">🗑️ 清空并上传新图</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    // ✅ 固定你的 API Key（请务必替换为你自己的有效 Key）
-    const FIXED_API_KEY = "AIzaSyCyJG_5rUIm9ZU0ufYaQiajTxSFUZYXwOk";
-
-    let rawData = [];
-    let chartInstance = null;
-    let topInfo = { money: 0, weightUsed: 0, weightTotal: 0, taxRate: 0 };
-
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const statusBox = document.getElementById('statusBox');
-
-    // 绑定事件
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.background = '#fff'; });
-    dropZone.addEventListener('dragleave', () => dropZone.style.background = 'var(--card)');
-    dropZone.addEventListener('drop', e => {
-        e.preventDefault();
-        dropZone.style.background = 'var(--card)';
-        handleFiles(e.dataTransfer.files);
-    });
-    fileInput.addEventListener('change', e => handleFiles(e.target.files));
-
-    async function handleFiles(files) {
-        if (files.length === 0) return;
-        if (files.length > 2) { alert("最多上传 2 张"); return; }
-
-        clearAllDataSilent();
-
-        statusBox.style.display = 'block';
-        statusBox.innerHTML = '<span class="loader"></span> 正在上传图片...';
-
-        const previewContainer = document.getElementById('previewContainer');
-        previewContainer.innerHTML = '';
-        for (const file of files) {
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
-            img.className = 'preview-img';
-            previewContainer.appendChild(img);
-        }
-
-        document.getElementById('btnAnalyze').disabled = false;
-        statusBox.innerHTML = '✅ 图片已上传，请点击“开始 AI 识别与分析”';
-    }
-
-    // ✅ 核心修复：根据预览图片数量返回不同 OCR 内容
-    async function processImages() {
-        const apiKey = FIXED_API_KEY;
-        if (!apiKey || apiKey === "YOUR_FIXED_API_KEY_HERE") {
-            statusBox.innerHTML = '<span style="color:red;">❌ 请先配置有效的 Google AI API Key</span>';
-            return;
-        }
-
-        try {
-            statusBox.innerHTML = '<span class="loader"></span> 正在调用 AI 视觉识别...';
-
-            const previewContainer = document.getElementById('previewContainer');
-            const imgCount = previewContainer.querySelectorAll('img').length;
-
-            let text;
-            if (imgCount === 1) {
-                // 第一张图：谷物 + 黏土（无棉花）
-                text = `
-金钱: 3.7万
-负重: 260/8000
-赋税: 10%
-谷物 剩余：32060 买入价格 14.4 传闻1:据说[肤施]的卖出价格为19.6
-黏土 剩余：19737 买入价格 18 传闻1:据说[成纪]的卖出价格为25.6
-`;
-            } else if (imgCount === 2) {
-                // 第二张图：黏土 + 棉花（无谷物）
-                text = `
-金钱: 3.7万
-负重: 260/8000
-赋税: 10%
-黏土 剩余：19737 买入价格 18 传闻1:据说[成纪]的卖出价格为25.6
-棉花 剩余：10252 买入价格 35.5 传闻1:据说[白土]的卖出价格为42.4
-`;
-            } else {
-                text = "无法识别，请检查截图";
-            }
-
-            parseResult(text);
-            
-            statusBox.innerHTML = '<span style="color:green;">✅ 图片识别完成！请检查数据并点击“生成最终报告”</span>';
-            document.getElementById('dataSection').style.display = 'block';
-            renderTable();
-        } catch (error) {
-            console.error(error);
-            statusBox.innerHTML = `<span style="color:red;">❌ 识别失败：${error.message}</span>`;
-        }
-    }
-
-    function parseResult(text) {
-        const lines = text.split('\n');
-        let currentCity = "戈居";
-
-        lines.forEach(line => {
-            line = line.trim();
-            if (!line) return;
-
-            if (line.includes("金钱") || line.includes("万")) {
-                const moneyMatch = line.match(/(\d+\.\d+)万/);
-                if (moneyMatch) topInfo.money = parseFloat(moneyMatch[1]) * 10000;
-            }
-            if (line.includes("/")) {
-                const weightMatch = line.match(/(\d+)\/(\d+)/);
-                if (weightMatch) {
-                    topInfo.weightUsed = parseInt(weightMatch[1]);
-                    topInfo.weightTotal = parseInt(weightMatch[2]);
-                }
-            }
-            if (line.includes("赋税")) {
-                const taxMatch = line.match(/赋税(\d+)%/);
-                if (taxMatch) topInfo.taxRate = parseInt(taxMatch[1]) / 100;
-            }
-
-            const itemMatch = line.match(/([一-龥]+)\s*剩余：(\d+)\s*买入价格\s*(\d+\.?\d*)/);
-            if (itemMatch) {
-                const currentItem = { 
-                    name: itemMatch[1], 
-                    buyCity: currentCity,
-                    stock: parseInt(itemMatch[2]),
-                    buyPrice: parseFloat(itemMatch[3]),
-                    source: "截图"
-                };
-                
-                const rumorMatch = line.match(/传闻\d+:据说\[(.*?)\]的卖出价格为(\d+\.?\d*)/);
-                if (rumorMatch) {
-                    const sellCity = rumorMatch[1];
-                    const sellPrice = parseFloat(rumorMatch[2]);
-                    rawData.push({ ...currentItem, sellCity, sellPrice });
-                }
-            }
-        });
-    }
-
-    function renderTable() {
-        const tbody = document.querySelector('#dataTable tbody');
-        tbody.innerHTML = '';
-
-        rawData.forEach((r, index) => {
-            const profit = r.sellPrice - r.buyPrice;
-            const rate = ((profit / r.buyPrice) * 100).toFixed(1);
-            
+        function addRow(defName="", buy="", sell="", used="", max="", qty="", taxVal="") {
+            const tbody = document.querySelector('#tradingTable tbody');
             const tr = document.createElement('tr');
+            
+            let taxOpts = `<option value="0">0%</option>`;
+            for(let i=10; i<=90; i++) taxOpts += `<option value="${i/100}" ${i/100==taxVal?'selected':''}>${i}%</option>`;
+
             tr.innerHTML = `
-                <td><input value="${r.source}" onchange="updateRow(${index}, 'source', this.value)"></td>
-                <td><input value="${r.name}" onchange="updateRow(${index}, 'name', this.value)"></td>
-                <td><input value="${r.buyCity}" onchange="updateRow(${index}, 'buyCity', this.value)"></td>
-                <td><input type="number" step="0.1" value="${r.buyPrice}" onchange="updateRow(${index}, 'buyPrice', this.value)"></td>
-                <td><input type="number" value="${r.stock}" onchange="updateRow(${index}, 'stock', this.value)"></td>
-                <td><input value="${r.sellCity}" onchange="updateRow(${index}, 'sellCity', this.value)"></td>
-                <td><input type="number" step="0.1" value="${r.sellPrice}" onchange="updateRow(${index}, 'sellPrice', this.value)"></td>
-                <td style="font-weight:bold; color:${rate>30?'red':'green'}">${rate}%</td>
-                <td><button onclick="removeRow(${index})" style="color:red;border:none;background:none;cursor:pointer;">×</button></td>
+                <td><div class="custom-select-wrapper" data-def="${defName}"><input type="text" class="custom-select-input" placeholder="搜..." autocomplete="off"><div class="custom-options"></div></div></td>
+                <td><input type="number" class="buy-price" value="${buy}" step="0.1"></td>
+                <td><input type="number" class="sell-price" value="${sell}" step="0.1"></td>
+                <td><input type="number" class="used-weight" value="${used}"></td>
+                <td><input type="number" class="max-weight" value="${max}"></td>
+                <td><input type="number" class="item-weight" value="" readonly style="background:#f0f0f0;"></td>
+                <td><input type="number" class="plan-qty" value="${qty}" placeholder="自动" step="1"></td>
+                <td><select class="tax-rate">${taxOpts}</select></td>
+                <td class="profit-cell">0.00</td>
+                <td class="status-cell">-</td>
+                <td><button class="btn-del" onclick="this.closest('tr').remove();if(!document.querySelectorAll('tbody tr').length)addRow();">×</button></td>
             `;
             tbody.appendChild(tr);
-        });
-    }
-
-    function updateRow(index, field, value) {
-        if(rawData[index]) {
-            rawData[index][field] = (field === 'name' || field === 'buyCity' || field === 'sellCity') ? value : parseFloat(value);
+            initSelect(tr.querySelector('.custom-select-wrapper'));
+            if(defName) setTimeout(()=>{
+                const inp = tr.querySelector('.custom-select-input');
+                inp.value = defName;
+                selectOpt(tr.querySelector('.custom-select-wrapper'), defName, true);
+            }, 0);
+            tr.querySelectorAll('input,select').forEach(i=>i.addEventListener('input',()=>calc(tr)));
         }
-    }
 
-    function removeRow(index) {
-        rawData.splice(index, 1);
-        renderTable();
-    }
+        function initSelect(wrap) {
+            const inp = wrap.querySelector('.custom-select-input');
+            const optsDiv = wrap.querySelector('.custom-options');
+            const row = wrap.closest('tr');
+            const wInp = row.querySelector('.item-weight');
+            
+            products.forEach(prod => {
+                const d = document.createElement('div');
+                d.className = 'custom-option';
+                d.innerHTML = `<span>${prod.n}</span><span class="weight-tag">${prod.w}</span>`;
+                d.dataset.v = prod.n; d.dataset.w = prod.w; d.dataset.p = prod.p;
+                optsDiv.appendChild(d);
+            });
+            const noRes = document.createElement('div'); noRes.className='no-results'; noRes.textContent='无匹配'; optsDiv.appendChild(noRes);
 
-    function analyzeData() {
-        if (rawData.length === 0) return alert("没有数据");
+            inp.addEventListener('focus', e=>{ e.stopPropagation(); closeAll(); wrap.classList.add('open'); filter(inp.value, optsDiv, noRes); });
+            inp.addEventListener('input', e=>{ e.stopPropagation(); wrap.classList.add('open'); filter(inp.value, optsDiv, noRes); });
+            optsDiv.addEventListener('mousedown', e=>{
+                e.preventDefault();
+                const t = e.target.classList.contains('custom-option')?e.target:e.target.parentElement;
+                if(t.classList.contains('custom-option')) selectOpt(wrap, t.dataset.v, true);
+            });
+            document.addEventListener('click', e=>{ if(!wrap.contains(e.target)) wrap.classList.remove('open'); });
+            
+            wInp.addEventListener('focus', function(){ this.style.background='#fff'; this.style.borderColor='#ffa000'; });
+            wInp.addEventListener('blur', function(){ if(!this.value) this.style.background='#f0f0f0'; });
+        }
 
-        const bestRoutes = [...rawData].sort((a, b) => b.sellPrice - a.sellPrice);
+        function filter(q, container, noRes) {
+            const qs = q.toLowerCase().trim();
+            let has = false;
+            container.querySelectorAll('.custom-option').forEach(opt => {
+                const n = opt.dataset.v, p = opt.dataset.p;
+                const match = n.includes(qs) || p.replace(/\s/g,'').includes(qs) || p.split(' ').map(x=>x[0]).join('').includes(qs);
+                opt.style.display = match ? 'flex' : 'none';
+                if(match) has = true;
+            });
+            noRes.style.display = has ? 'none' : 'block';
+        }
 
-        let analysisHtml = `<div class="highlight">🎯 最佳跑商方案：</div>`;
-        analysisHtml += `<ul>`;
-        bestRoutes.slice(0, 3).forEach(r => {
-            const profitPerUnit = r.sellPrice - r.buyPrice;
-            const maxBuy = Math.floor(topInfo.weightTotal / 15);
-            const totalProfit = profitPerUnit * maxBuy * (1 - topInfo.taxRate);
-            analysisHtml += `<li><strong>${r.name}</strong>: ${r.buyCity} → ${r.sellCity} (${profitPerUnit.toFixed(1)}金/件)<br>可购买: ${maxBuy} 件 | 总利润: ${totalProfit.toFixed(1)}金</li>`;
-        });
-        analysisHtml += `</ul>`;
+        function selectOpt(wrap, val, force) {
+            const inp = wrap.querySelector('.custom-select-input');
+            const row = wrap.closest('tr');
+            const wInp = row.querySelector('.item-weight');
+            const prod = products.find(x=>x.n===val);
+            inp.value = val; wrap.classList.remove('open');
+            wrap.querySelectorAll('.custom-option').forEach(o=>o.classList.toggle('selected', o.dataset.v===val));
+            if(prod && force) {
+                wInp.value = prod.w;
+                wInp.style.background = '#e8f5e9';
+                setTimeout(()=>{ if(document.activeElement!==wInp) wInp.style.background='#f0f0f0'; }, 500);
+                calc(row);
+            }
+        }
 
-        analysisHtml += `<div class="highlight">💰 当前状态：</div>`;
-        analysisHtml += `<p>金钱: ${topInfo.money.toLocaleString()}金 | 负重: ${topInfo.weightUsed}/${topInfo.weightTotal} | 赋税: ${topInfo.taxRate * 100}%</p>`;
+        function closeAll() { document.querySelectorAll('.custom-select-wrapper').forEach(w=>w.classList.remove('open')); }
 
-        document.getElementById('analysisContent').innerHTML = analysisHtml;
-        document.getElementById('resultSection').style.display = 'block';
+        function calc(row) {
+            const b = parseFloat(row.querySelector('.buy-price').value)||0;
+            const s = parseFloat(row.querySelector('.sell-price').value)||0;
+            const u = parseFloat(row.querySelector('.used-weight').value)||0;
+            const m = parseFloat(row.querySelector('.max-weight').value)||0;
+            let w = parseFloat(row.querySelector('.item-weight').value);
+            const t = parseFloat(row.querySelector('.tax-rate').value)||0;
+            const qtyInput = row.querySelector('.plan-qty').value.trim();
+            
+            if(!w) w=1;
+            
+            let quantity = 0;
+            let statusMsg = "";
+            let statusClass = "status-ok";
 
-        renderChart();
-    }
-
-    function renderChart() {
-        const ctx = document.getElementById('trendChart').getContext('2d');
-        if (chartInstance) chartInstance.destroy();
-
-        const labels = rawData.slice(0, 10).map(r => `${r.name}(${r.sellCity})`);
-        const dataRate = rawData.slice(0, 10).map(r => (r.sellPrice - r.buyPrice) / r.buyPrice * 100);
-        const dataPrice = rawData.slice(0, 10).map(r => r.sellPrice);
-
-        chartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: '利润率 (%)',
-                        data: dataRate,
-                        backgroundColor: 'rgba(212, 160, 23, 0.6)',
-                        borderColor: 'rgba(212, 160, 23, 1)',
-                        borderWidth: 1,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: '卖出单价',
-                        data: dataPrice,
-                        type: 'line',
-                        borderColor: '#d32f2f',
-                        borderWidth: 2,
-                        yAxisID: 'y1'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { type: 'linear', display: true, position: 'left', title: {display:true, text:'利润率 %'} },
-                    y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea:false}, title: {display:true, text:'价格'} }
+            if (qtyInput === "") {
+                // 模式A：自动计算 (总重 - 已占) / 单重
+                const avail = Math.max(0, m - u);
+                quantity = Math.floor(avail / w);
+                statusMsg = `自动 (${quantity}个)`;
+                if (quantity === 0 && avail > 0) statusMsg = "单重过大";
+            } else {
+                // 模式B：按用户输入的数量
+                quantity = parseInt(qtyInput);
+                const totalWeight = quantity * w;
+                if (totalWeight + u > m) {
+                    statusMsg = `超重! (${totalWeight+u}/${m})`;
+                    statusClass = "status-error";
+                } else {
+                    const usage = (((totalWeight+u)/m)*100).toFixed(1);
+                    statusMsg = `占用 ${usage}%`;
+                    statusClass = "status-ok";
                 }
             }
-        });
-    }
 
-    function clearAllData() {
-        if (confirm("确定要清空所有数据并重新开始吗？")) {
-            clearAllDataSilent();
-            alert("✅ 所有数据已清空，现在可以上传新截图了！");
+            const profit = (s - b) * quantity * (1 - t);
+            const profitCell = row.querySelector('.profit-cell');
+            const statusCell = row.querySelector('.status-cell');
+            
+            profitCell.textContent = profit.toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
+            profitCell.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+            
+            statusCell.textContent = statusMsg;
+            statusCell.className = "status-cell " + statusClass;
         }
-    }
-
-    function clearAllDataSilent() {
-        rawData = [];
-        topInfo = { money: 0, weightUsed: 0, weightTotal: 0, taxRate: 0 };
-        
-        document.getElementById('previewContainer').innerHTML = '';
-        document.getElementById('dataSection').style.display = 'none';
-        document.getElementById('resultSection').style.display = 'none';
-        document.getElementById('statusBox').style.display = 'none';
-        document.getElementById('btnAnalyze').disabled = true;
-        
-        document.getElementById('fileInput').value = '';
-        
-        if (chartInstance) {
-            chartInstance.destroy();
-            chartInstance = null;
-        }
-    }
-</script>
-
+    </script>
 </body>
 </html>

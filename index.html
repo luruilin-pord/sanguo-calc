@@ -10,83 +10,200 @@
         .container { max-width: 100%; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden; }
         h1 { text-align: center; padding: 15px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: #fff; margin: 0; font-size: 18px; letter-spacing: 1px; }
         
-        /* 表格样式 */
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #eee; font-size: 13px; white-space: nowrap; }
-        th { background: #f8f9fa; font-weight: 600; color: #555; position: sticky; top: 0; z-index: 10; }
+        /* 表格样式 - 关键修复 */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+            table-layout: fixed; /* 固定布局，防止列宽漂移 */
+        }
+        colgroup {
+            col:nth-child(1) { width: 15%; }
+            col:nth-child(2) { width: 12%; }
+            col:nth-child(3) { width: 12%; }
+            col:nth-child(4) { width: 12%; }
+            col:nth-child(5) { width: 12%; }
+            col:nth-child(6) { width: 12%; }
+            col:nth-child(7) { width: 14%; }
+            col:nth-child(8) { width: 8%; }
+        }
+        th, td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-sizing: border-box;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
         
         /* 输入框样式 */
-        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; text-align: center; transition: all 0.2s; }
-        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,117,252,0.15); background: #fff; }
-        input[readonly] { background: #f0f2f5; color: #666; cursor: not-allowed; border-color: #eee; }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37,117,252,0.15);
+            background: #fff;
+        }
+        input[readonly] {
+            background: #f0f2f5;
+            color: #666;
+            cursor: not-allowed;
+            border-color: #eee;
+        }
         
         /* 下拉搜索组件 */
-        .custom-select-wrapper { position: relative; width: 140px; margin: 0 auto; }
-        .custom-select-input { cursor: text; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 10px center; padding-right: 25px; text-align: left; }
-        .custom-options { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--primary); border-top: 0; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: 0 8px 16px rgba(0,0,0,0.15); border-radius: 0 0 6px 6px; display: none; }
+        .custom-select-wrapper {
+            width: 100%;
+            position: relative;
+        }
+        .custom-select-input {
+            cursor: text;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 10px center;
+            padding-right: 25px;
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .custom-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid var(--primary);
+            border-top: 0;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            border-radius: 0 0 6px 6px;
+            display: none;
+        }
         .custom-select-wrapper.open .custom-options { display: block; }
-        .custom-option { padding: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; text-align: left; }
+        .custom-option {
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
         .custom-option:hover { background: #eef2ff; color: var(--primary); }
-        .weight-tag { font-size: 11px; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; }
-        .no-results { padding: 10px; text-align: center; color: #999; font-style: italic; display: none; }
+        .weight-tag {
+            font-size: 11px;
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #666;
+        }
+        .no-results {
+            padding: 10px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            display: none;
+        }
 
         /* 数据单元格样式 */
-        .profit-cell { font-weight: bold; font-size: 14px; color: var(--success); }
+        .profit-cell, .rate-cell {
+            font-weight: bold;
+            font-size: 14px;
+        }
         .loss { color: var(--danger); }
-        .rate-cell { font-size: 12px; color: #666; }
         .rate-high { color: var(--success); font-weight: bold; }
         .rate-low { color: var(--warn); }
         
         /* 按钮样式 */
-        .btn-add { background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; margin: 15px auto; display: block; box-shadow: 0 4px 6px rgba(37,117,252,0.2); transition: transform 0.1s; }
+        .btn-add {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 15px auto;
+            display: block;
+            box-shadow: 0 4px 6px rgba(37,117,252,0.2);
+            transition: transform 0.1s;
+        }
         .btn-add:active { transform: scale(0.98); }
-        .btn-del { background: #ffebee; color: var(--danger); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.2s; }
+        .btn-del {
+            background: #ffebee;
+            color: var(--danger);
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
         .btn-del:hover { background: #ffcdd2; }
         
-        .footer { text-align: center; padding: 15px; font-size: 12px; color: #888; background: #fafafa; border-top: 1px solid #eee; }
-        .note { background: #e3f2fd; color: #1565c0; padding: 10px; font-size: 12px; text-align: center; border-bottom: 1px solid #bbdefb; }
-        
-        /* 合计栏 */
-        .summary-bar {
-            background: #fff;
+        .footer {
+            text-align: center;
             padding: 15px;
-            display: flex;
-            justify-content: space-around;
-            border-top: 2px solid #f0f0f0;
-            font-size: 14px;
+            font-size: 12px;
+            color: #888;
+            background: #fafafa;
+            border-top: 1px solid #eee;
         }
-        .summary-item strong { display: block; font-size: 16px; margin-top: 4px; }
-        .sum-profit { color: var(--success); }
-        .sum-cost { color: var(--text); }
+        .note {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 10px;
+            font-size: 12px;
+            text-align: center;
+            border-bottom: 1px solid #bbdefb;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🧊 三国冰河·极简跑商计算器</h1>
-        <div class="note">💡 提示：输入拼音首字母快速搜索 (如 "tks"=铜矿石)。自动计算总成本和利润率。</div>
+        <div class="note">💡 提示：输入拼音首字母快速搜索 (如 "tks"=铜矿石)。修改后当前行利润/利润率标蓝。</div>
         
         <div class="table-wrapper">
             <table id="tradingTable">
+                <colgroup>
+                    <col><col><col><col><col><col><col><col>
+                </colgroup>
                 <thead>
                     <tr>
-                        <th style="width: 18%;">商品</th>
-                        <th style="width: 12%;">买入价</th>
-                        <th style="width: 12%;">卖出价</th>
-                        <th style="width: 12%;">数量</th>
-                        <th style="width: 12%;">总成本</th>
-                        <th style="width: 12%;">利润率</th>
-                        <th style="width: 14%;">净利润</th>
-                        <th style="width: 8%;">操作</th>
+                        <th>商品</th>
+                        <th>买入价</th>
+                        <th>卖出价</th>
+                        <th>数量</th>
+                        <th>总成本</th>
+                        <th>利润率</th>
+                        <th>净利润</th>
+                        <th>操作</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
-        </div>
-
-        <div class="summary-bar">
-            <div class="summary-item">总成本<strong class="sum-cost" id="totalCost">0</strong></div>
-            <div class="summary-item">总利润<strong class="sum-profit" id="totalProfit">0</strong></div>
         </div>
 
         <button class="btn-add" onclick="addRow()">+ 添加一行</button>
@@ -110,7 +227,6 @@
         window.onload = () => {
             addRow("谷物", 14.1, 17.6, 100); 
             addRow("茶叶", 58.4, 73.1, 50);
-            updateSummary();
         };
 
         function addRow(defName="", buy="", sell="", qty="") {
@@ -142,11 +258,11 @@
                 selectOpt(tr.querySelector('.custom-select-wrapper'), defName, true);
             }, 0);
             
-            // 绑定输入事件
+            // 绑定输入事件 —— 标记为已修改
             tr.querySelectorAll('input').forEach(i => {
                 i.addEventListener('input', () => {
+                    tr.dataset.modified = 'true';
                     calcRow(tr);
-                    updateSummary();
                 });
             });
             
@@ -157,16 +273,14 @@
             const rows = document.querySelectorAll('#tradingTable tbody tr');
             if (rows.length > 1) {
                 btn.closest('tr').remove();
-                updateSummary();
             } else {
-                // 如果只剩一行，清空数据而不是删除
                 const row = btn.closest('tr');
                 row.querySelectorAll('input').forEach(i => {
                     if(!i.readOnly) i.value = '';
                     if(i.classList.contains('custom-select-input')) i.value = '';
                 });
+                delete row.dataset.modified;
                 calcRow(row);
-                updateSummary();
             }
         }
 
@@ -199,6 +313,7 @@
                 e.stopPropagation(); 
                 wrap.classList.add('open'); 
                 filter(inp.value, optsDiv, noRes); 
+                row.dataset.modified = 'true';
             });
             
             optsDiv.addEventListener('mousedown', e => {
@@ -206,8 +321,8 @@
                 const t = e.target.classList.contains('custom-option') ? e.target : e.target.parentElement;
                 if(t.classList.contains('custom-option')) {
                     selectOpt(wrap, t.dataset.v, true);
+                    row.dataset.modified = 'true';
                     calcRow(row);
-                    updateSummary();
                 }
             });
             
@@ -254,30 +369,22 @@
             
             const profitCell = row.querySelector('.profit-cell');
             profitCell.textContent = profit.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            profitCell.className = 'profit-cell ' + (profit >= 0 ? '' : 'loss');
             
             const rateCell = row.querySelector('.rate-cell');
             rateCell.textContent = rate.toFixed(1) + '%';
-            rateCell.className = 'rate-cell ' + (rate >= 20 ? 'rate-high' : (rate < 0 ? 'loss' : 'rate-low'));
-        }
-
-        function updateSummary() {
-            let totalCost = 0;
-            let totalProfit = 0;
             
-            document.querySelectorAll('#tradingTable tbody tr').forEach(row => {
-                const buy = parseFloat(row.querySelector('.buy-price').value) || 0;
-                const sell = parseFloat(row.querySelector('.sell-price').value) || 0;
-                const qty = parseInt(row.querySelector('.plan-qty').value) || 0;
-                
-                totalCost += buy * qty;
-                totalProfit += (sell - buy) * qty;
-            });
-            
-            document.getElementById('totalCost').textContent = totalCost.toLocaleString('zh-CN', {maximumFractionDigits: 0});
-            const profitEl = document.getElementById('totalProfit');
-            profitEl.textContent = totalProfit.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            profitEl.style.color = totalProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+            // ===== 核心：修改行标蓝逻辑 =====
+            if (row.dataset.modified === 'true') {
+                profitCell.style.color = '#1976d2';
+                rateCell.style.color = '#1976d2';
+                profitCell.className = 'profit-cell';
+                rateCell.className = 'rate-cell';
+            } else {
+                profitCell.style.color = '';
+                rateCell.style.color = '';
+                profitCell.className = 'profit-cell ' + (profit >= 0 ? '' : 'loss');
+                rateCell.className = 'rate-cell ' + (rate >= 20 ? 'rate-high' : (rate < 0 ? 'loss' : 'rate-low'));
+            }
         }
     </script>
 </body>

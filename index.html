@@ -5,18 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>三国冰河·极简跑商计算器</title>
     <style>
-        :root { --primary: #2575fc; --bg: #f5f5f5; --text: #333; --success: #2e7d32; --danger: #d32f2f; --warn: #f57c00; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        .container { max-width: 100%; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden; }
-        h1 { text-align: center; padding: 15px; background: linear-gradient(135deg, #6a11cb, #2575fc); color: #fff; margin: 0; font-size: 18px; letter-spacing: 1px; }
+        :root {
+            --primary: #2575fc;
+            --bg: #f5f5f5;
+            --text: #333;
+            --success: #2e7d32;
+            --danger: #d32f2f;
+            --warn: #f57c00;
+            --blue: #1976d2;
+            --orange: #f57c00;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 10px;
+            color: var(--text);
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        h1 {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
         
-        /* 表格样式 - 关键修复 */
-        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+        /* 表格样式 */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate; /* 关键：允许 td 有 spacing */
+            border-spacing: 0 8px; /* 垂直间距 8px */
             min-width: 600px;
-            table-layout: fixed; /* 固定布局，防止列宽漂移 */
+            table-layout: fixed;
         }
         colgroup {
             col:nth-child(1) { width: 15%; }
@@ -29,14 +64,13 @@
             col:nth-child(8) { width: 8%; }
         }
         th, td {
-            padding: 10px 8px;
+            padding: 14px 10px; /* 加大垂直间距 */
             text-align: center;
-            border-bottom: 1px solid #eee;
+            border: none;
             font-size: 13px;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             box-sizing: border-box;
+            background: #fff;
         }
         th {
             background: #f8f9fa;
@@ -45,13 +79,15 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            line-height: 1.4;
+            border-bottom: 2px solid #ddd;
         }
-        
+
         /* 输入框样式 */
         input {
             width: 100%;
             padding: 8px;
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 14px;
@@ -65,16 +101,17 @@
             background: #fff;
         }
         input[readonly] {
-            background: #f0f2f5;
+            background: #f9f9f9;
             color: #666;
             cursor: not-allowed;
             border-color: #eee;
         }
-        
-        /* 下拉搜索组件 */
+
+        /* 下拉搜索组件 —— 修复显示问题 */
         .custom-select-wrapper {
             width: 100%;
             position: relative;
+            display: inline-block;
         }
         .custom-select-input {
             cursor: text;
@@ -83,6 +120,8 @@
             text-align: left;
             width: 100%;
             box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
         }
         .custom-options {
             position: absolute;
@@ -94,21 +133,25 @@
             border-top: 0;
             max-height: 250px;
             overflow-y: auto;
-            z-index: 1000;
+            z-index: 10000; /* 更高 */
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
             border-radius: 0 0 6px 6px;
             display: none;
+            margin-top: -1px;
         }
         .custom-select-wrapper.open .custom-options { display: block; }
         .custom-option {
-            padding: 10px;
+            padding: 8px 10px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
             text-align: left;
         }
-        .custom-option:hover { background: #eef2ff; color: var(--primary); }
+        .custom-option:hover {
+            background: #eef2ff;
+            color: var(--primary);
+        }
         .weight-tag {
             font-size: 11px;
             background: #eee;
@@ -128,11 +171,9 @@
         .profit-cell, .rate-cell {
             font-weight: bold;
             font-size: 14px;
+            /* 默认黑色，由 JS 控制颜色 */
         }
-        .loss { color: var(--danger); }
-        .rate-high { color: var(--success); font-weight: bold; }
-        .rate-low { color: var(--warn); }
-        
+
         /* 按钮样式 */
         .btn-add {
             background: var(--primary);
@@ -161,7 +202,7 @@
             transition: background 0.2s;
         }
         .btn-del:hover { background: #ffcdd2; }
-        
+
         .footer {
             text-align: center;
             padding: 15px;
@@ -183,7 +224,7 @@
 <body>
     <div class="container">
         <h1>🧊 三国冰河·极简跑商计算器</h1>
-        <div class="note">💡 提示：输入拼音首字母快速搜索 (如 "tks"=铜矿石)。修改后当前行利润/利润率标蓝。</div>
+        <div class="note">💡 提示：输入拼音首字母快速搜索 (如 "tks"=铜矿石)。每次修改行会按顺序变色：黑→绿→红→蓝→橙→循环。</div>
         
         <div class="table-wrapper">
             <table id="tradingTable">
@@ -224,14 +265,20 @@
             {n:"金银器",w:27,p:"jin yin qi"}
         ];
 
+        // 颜色轮盘：黑 → 绿 → 红 → 蓝 → 橙
+        const editColors = ['#000000', '#2e7d32', '#d32f2f', '#1976d2', '#f57c00'];
+
         window.onload = () => {
-            addRow("谷物", 14.1, 17.6, 100); 
+            addRow("谷物", 14.1, 17.6, 100);
             addRow("茶叶", 58.4, 73.1, 50);
         };
 
         function addRow(defName="", buy="", sell="", qty="") {
             const tbody = document.querySelector('#tradingTable tbody');
             const tr = document.createElement('tr');
+            
+            // 初始 editCount 为 0（黑色）
+            tr.dataset.editCount = '0';
             
             tr.innerHTML = `
                 <td>
@@ -252,16 +299,18 @@
             
             initSelect(tr.querySelector('.custom-select-wrapper'));
             
-            if(defName) setTimeout(()=>{
-                const inp = tr.querySelector('.custom-select-input');
-                inp.value = defName;
-                selectOpt(tr.querySelector('.custom-select-wrapper'), defName, true);
-            }, 0);
+            if(defName) {
+                setTimeout(()=>{
+                    const inp = tr.querySelector('.custom-select-input');
+                    inp.value = defName;
+                    selectOpt(tr.querySelector('.custom-select-wrapper'), defName, true);
+                }, 0);
+            }
             
-            // 绑定输入事件 —— 标记为已修改
+            // 绑定输入事件
             tr.querySelectorAll('input').forEach(i => {
                 i.addEventListener('input', () => {
-                    tr.dataset.modified = 'true';
+                    incrementEditCount(tr);
                     calcRow(tr);
                 });
             });
@@ -279,9 +328,14 @@
                     if(!i.readOnly) i.value = '';
                     if(i.classList.contains('custom-select-input')) i.value = '';
                 });
-                delete row.dataset.modified;
+                row.dataset.editCount = '0';
                 calcRow(row);
             }
+        }
+
+        function incrementEditCount(row) {
+            let count = parseInt(row.dataset.editCount) || 0;
+            row.dataset.editCount = (count + 1).toString();
         }
 
         function initSelect(wrap) {
@@ -313,7 +367,8 @@
                 e.stopPropagation(); 
                 wrap.classList.add('open'); 
                 filter(inp.value, optsDiv, noRes); 
-                row.dataset.modified = 'true';
+                incrementEditCount(row);
+                calcRow(row);
             });
             
             optsDiv.addEventListener('mousedown', e => {
@@ -321,7 +376,7 @@
                 const t = e.target.classList.contains('custom-option') ? e.target : e.target.parentElement;
                 if(t.classList.contains('custom-option')) {
                     selectOpt(wrap, t.dataset.v, true);
-                    row.dataset.modified = 'true';
+                    incrementEditCount(row);
                     calcRow(row);
                 }
             });
@@ -373,18 +428,12 @@
             const rateCell = row.querySelector('.rate-cell');
             rateCell.textContent = rate.toFixed(1) + '%';
             
-            // ===== 核心：修改行标蓝逻辑 =====
-            if (row.dataset.modified === 'true') {
-                profitCell.style.color = '#1976d2';
-                rateCell.style.color = '#1976d2';
-                profitCell.className = 'profit-cell';
-                rateCell.className = 'rate-cell';
-            } else {
-                profitCell.style.color = '';
-                rateCell.style.color = '';
-                profitCell.className = 'profit-cell ' + (profit >= 0 ? '' : 'loss');
-                rateCell.className = 'rate-cell ' + (rate >= 20 ? 'rate-high' : (rate < 0 ? 'loss' : 'rate-low'));
-            }
+            // ===== 应用颜色轮盘 =====
+            const count = parseInt(row.dataset.editCount) || 0;
+            const color = editColors[count % editColors.length];
+            
+            profitCell.style.color = color;
+            rateCell.style.color = color;
         }
     </script>
 </body>

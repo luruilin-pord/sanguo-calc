@@ -304,7 +304,7 @@
                     tr.dataset.timeoutId = setTimeout(() => {
                         incrementEditCount(tr);
                         calcRow(tr);
-                    }, 1000); // 500ms 防抖
+                    }, 5000); // 500ms 防抖
                 });
             });
 
@@ -374,7 +374,7 @@
                     row.dataset.timeoutId = setTimeout(() => {
                         incrementEditCount(row);
                         calcRow(row);
-                    }, 1000);
+                    }, 5000);
                 }
             });
 

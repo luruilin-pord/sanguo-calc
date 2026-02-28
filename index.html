@@ -9,11 +9,6 @@
             --primary: #2575fc;
             --bg: #f5f5f5;
             --text: #333;
-            --success: #2e7d32;
-            --danger: #d32f2f;
-            --warn: #f57c00;
-            --blue: #1976d2;
-            --orange: #f57c00;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -48,8 +43,8 @@
         }
         table {
             width: 100%;
-            border-collapse: separate; /* 关键：允许 td 有 spacing */
-            border-spacing: 0 8px; /* 垂直间距 8px */
+            border-collapse: separate;
+            border-spacing: 0 10px; /* 加大行间距 */
             min-width: 600px;
             table-layout: fixed;
         }
@@ -64,7 +59,7 @@
             col:nth-child(8) { width: 8%; }
         }
         th, td {
-            padding: 14px 10px; /* 加大垂直间距 */
+            padding: 14px 10px;
             text-align: center;
             border: none;
             font-size: 13px;
@@ -83,7 +78,7 @@
             border-bottom: 2px solid #ddd;
         }
 
-        /* 输入框样式 */
+        /* 输入框 */
         input {
             width: 100%;
             padding: 8px;
@@ -92,13 +87,11 @@
             box-sizing: border-box;
             font-size: 14px;
             text-align: center;
-            transition: all 0.2s;
         }
         input:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(37,117,252,0.15);
-            background: #fff;
         }
         input[readonly] {
             background: #f9f9f9;
@@ -107,7 +100,7 @@
             border-color: #eee;
         }
 
-        /* 下拉搜索组件 —— 修复显示问题 */
+        /* 下拉选择器 */
         .custom-select-wrapper {
             width: 100%;
             position: relative;
@@ -133,7 +126,7 @@
             border-top: 0;
             max-height: 250px;
             overflow-y: auto;
-            z-index: 10000; /* 更高 */
+            z-index: 10000;
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
             border-radius: 0 0 6px 6px;
             display: none;
@@ -167,14 +160,14 @@
             display: none;
         }
 
-        /* 数据单元格样式 */
+        /* 利润单元格 */
         .profit-cell, .rate-cell {
             font-weight: bold;
             font-size: 14px;
-            /* 默认黑色，由 JS 控制颜色 */
+            /* 颜色由 JS 控制 */
         }
 
-        /* 按钮样式 */
+        /* 按钮 */
         .btn-add {
             background: var(--primary);
             color: #fff;
@@ -187,19 +180,16 @@
             margin: 15px auto;
             display: block;
             box-shadow: 0 4px 6px rgba(37,117,252,0.2);
-            transition: transform 0.1s;
         }
-        .btn-add:active { transform: scale(0.98); }
         .btn-del {
             background: #ffebee;
-            color: var(--danger);
+            color: #d32f2f;
             border: none;
             padding: 6px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
-            transition: background 0.2s;
         }
         .btn-del:hover { background: #ffcdd2; }
 
@@ -224,7 +214,7 @@
 <body>
     <div class="container">
         <h1>🧊 三国冰河·极简跑商计算器</h1>
-        <div class="note">💡 提示：输入拼音首字母快速搜索 (如 "tks"=铜矿石)。每次修改行会按顺序变色：黑→绿→红→蓝→橙→循环。</div>
+        <div class="note">💡 提示：输入拼音首字母快速搜索 (如 "tks"=铜矿石)。每次整行修改后颜色变化：黑→绿→红→蓝→橙→循环。</div>
         
         <div class="table-wrapper">
             <table id="tradingTable">
@@ -252,7 +242,7 @@
     </div>
 
     <script>
-        // 商品数据库
+        // 商品数据
         const products = [
             {n:"黏土",w:15,p:"nian tu"}, {n:"棉花",w:13,p:"mian hua"}, {n:"茶叶",w:13,p:"cha ye"},
             {n:"铁矿石",w:34,p:"tie kuang shi"}, {n:"铜矿石",w:35,p:"tong kuang shi"}, {n:"谷物",w:10,p:"gu wu"},
@@ -270,16 +260,16 @@
 
         window.onload = () => {
             addRow("谷物", 14.1, 17.6, 100);
-            addRow("茶叶", 58.4, 73.1, 50);
+            addRow("铜矿石", 58.4, 73.1, 50);
         };
 
         function addRow(defName="", buy="", sell="", qty="") {
             const tbody = document.querySelector('#tradingTable tbody');
             const tr = document.createElement('tr');
-            
-            // 初始 editCount 为 0（黑色）
-            tr.dataset.editCount = '0';
-            
+
+            tr.dataset.editCount = '0'; // 初始为黑色
+            tr.dataset.timeoutId = null;
+
             tr.innerHTML = `
                 <td>
                     <div class="custom-select-wrapper" data-def="${defName}">
@@ -296,9 +286,9 @@
                 <td><button class="btn-del" onclick="removeRow(this)">×</button></td>
             `;
             tbody.appendChild(tr);
-            
+
             initSelect(tr.querySelector('.custom-select-wrapper'));
-            
+
             if(defName) {
                 setTimeout(()=>{
                     const inp = tr.querySelector('.custom-select-input');
@@ -306,15 +296,18 @@
                     selectOpt(tr.querySelector('.custom-select-wrapper'), defName, true);
                 }, 0);
             }
-            
-            // 绑定输入事件
-            tr.querySelectorAll('input').forEach(i => {
-                i.addEventListener('input', () => {
-                    incrementEditCount(tr);
-                    calcRow(tr);
+
+            // 绑定防抖输入事件
+            tr.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', () => {
+                    clearTimeout(tr.dataset.timeoutId);
+                    tr.dataset.timeoutId = setTimeout(() => {
+                        incrementEditCount(tr);
+                        calcRow(tr);
+                    }, 1000); // 500ms 防抖
                 });
             });
-            
+
             calcRow(tr);
         }
 
@@ -325,8 +318,8 @@
             } else {
                 const row = btn.closest('tr');
                 row.querySelectorAll('input').forEach(i => {
-                    if(!i.readOnly) i.value = '';
-                    if(i.classList.contains('custom-select-input')) i.value = '';
+                    if (!i.readOnly) i.value = '';
+                    if (i.classList.contains('custom-select-input')) i.value = '';
                 });
                 row.dataset.editCount = '0';
                 calcRow(row);
@@ -342,96 +335,98 @@
             const inp = wrap.querySelector('.custom-select-input');
             const optsDiv = wrap.querySelector('.custom-options');
             const row = wrap.closest('tr');
-            
+
             products.forEach(prod => {
-                const d = document.createElement('div');
-                d.className = 'custom-option';
-                d.innerHTML = `<span>${prod.n}</span><span class="weight-tag">${prod.w}</span>`;
-                d.dataset.v = prod.n;
-                d.dataset.p = prod.p;
-                optsDiv.appendChild(d);
+                const div = document.createElement('div');
+                div.className = 'custom-option';
+                div.innerHTML = `<span>${prod.n}</span><span class="weight-tag">${prod.w}</span>`;
+                div.dataset.v = prod.n;
+                div.dataset.p = prod.p;
+                optsDiv.appendChild(div);
             });
-            
-            const noRes = document.createElement('div'); 
-            noRes.className='no-results'; 
-            noRes.textContent='无匹配商品'; 
+
+            const noRes = document.createElement('div');
+            noRes.className = 'no-results';
+            noRes.textContent = '无匹配商品';
             optsDiv.appendChild(noRes);
 
-            inp.addEventListener('focus', e => { 
-                e.stopPropagation(); 
-                closeAll(); 
-                wrap.classList.add('open'); 
-                filter(inp.value, optsDiv, noRes); 
+            inp.addEventListener('focus', e => {
+                e.stopPropagation();
+                closeAll();
+                wrap.classList.add('open');
+                filter(inp.value, optsDiv, noRes);
             });
-            inp.addEventListener('input', e => { 
-                e.stopPropagation(); 
-                wrap.classList.add('open'); 
-                filter(inp.value, optsDiv, noRes); 
-                incrementEditCount(row);
-                calcRow(row);
+
+            inp.addEventListener('input', e => {
+                e.stopPropagation();
+                wrap.classList.add('open');
+                filter(inp.value, optsDiv, noRes);
+                // 注意：这里不直接 increment，交给防抖统一处理
             });
-            
+
             optsDiv.addEventListener('mousedown', e => {
                 e.preventDefault();
-                const t = e.target.classList.contains('custom-option') ? e.target : e.target.parentElement;
-                if(t.classList.contains('custom-option')) {
-                    selectOpt(wrap, t.dataset.v, true);
-                    incrementEditCount(row);
-                    calcRow(row);
+                const target = e.target.classList.contains('custom-option') ? e.target : e.target.closest('.custom-option');
+                if (target && target.classList.contains('custom-option')) {
+                    selectOpt(wrap, target.dataset.v, true);
+                    // 触发防抖逻辑
+                    clearTimeout(row.dataset.timeoutId);
+                    row.dataset.timeoutId = setTimeout(() => {
+                        incrementEditCount(row);
+                        calcRow(row);
+                    }, 1000);
                 }
             });
-            
-            document.addEventListener('click', e => { 
-                if(!wrap.contains(e.target)) wrap.classList.remove('open'); 
+
+            document.addEventListener('click', e => {
+                if (!wrap.contains(e.target)) wrap.classList.remove('open');
             });
         }
 
-        function filter(q, container, noRes) {
-            const qs = q.toLowerCase().trim();
-            let has = false;
+        function filter(query, container, noRes) {
+            const q = query.toLowerCase().trim();
+            let hasMatch = false;
             container.querySelectorAll('.custom-option').forEach(opt => {
-                const n = opt.dataset.v, p = opt.dataset.p;
-                const match = n.includes(qs) || p.replace(/\s/g,'').includes(qs) || p.split(' ').map(x=>x[0]).join('').includes(qs);
+                const name = opt.dataset.v;
+                const pinyin = opt.dataset.p;
+                const match = name.includes(q) ||
+                              pinyin.replace(/\s/g, '').includes(q) ||
+                              pinyin.split(' ').map(x => x[0]).join('').includes(q);
                 opt.style.display = match ? 'flex' : 'none';
-                if(match) has = true;
+                if (match) hasMatch = true;
             });
-            noRes.style.display = has ? 'none' : 'block';
+            noRes.style.display = hasMatch ? 'none' : 'block';
         }
 
-        function selectOpt(wrap, val, force) {
+        function selectOpt(wrap, val) {
             const inp = wrap.querySelector('.custom-select-input');
-            inp.value = val; 
+            inp.value = val;
             wrap.classList.remove('open');
-            wrap.querySelectorAll('.custom-option').forEach(o => {
-                o.classList.toggle('selected', o.dataset.v === val);
-            });
         }
 
-        function closeAll() { 
-            document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open')); 
+        function closeAll() {
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
         }
 
         function calcRow(row) {
             const buy = parseFloat(row.querySelector('.buy-price').value) || 0;
             const sell = parseFloat(row.querySelector('.sell-price').value) || 0;
             const qty = parseInt(row.querySelector('.plan-qty').value) || 0;
-            
+
             const cost = buy * qty;
             const profit = (sell - buy) * qty;
-            const rate = cost > 0 ? (profit / cost) * 100 : 0;
-            
+            const rate = cost > 0 ? ((profit / cost) * 100) : 0;
+
             row.querySelector('.cost-display').value = cost.toLocaleString('zh-CN', {maximumFractionDigits: 1});
-            
             const profitCell = row.querySelector('.profit-cell');
-            profitCell.textContent = profit.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            
             const rateCell = row.querySelector('.rate-cell');
+
+            profitCell.textContent = profit.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             rateCell.textContent = rate.toFixed(1) + '%';
-            
-            // ===== 应用颜色轮盘 =====
+
+            // 应用颜色
             const count = parseInt(row.dataset.editCount) || 0;
             const color = editColors[count % editColors.length];
-            
             profitCell.style.color = color;
             rateCell.style.color = color;
         }

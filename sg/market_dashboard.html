@@ -38,6 +38,8 @@ tr:last-child td{border-bottom:none}
 
     <div style="margin:12px 0 6px;font-weight:600;color:#555">商品价格对比</div>
     <div class="controls">
+        <label for="itemSearch">搜索：</label>
+        <input id="itemSearch" type="text" placeholder="商品/拼音/首字母" style="flex:1;min-width:160px;padding:10px 16px;border-radius:8px;border:1px solid #ddd;font-size:14px;outline:none">
         <label for="itemSelect">选择商品：</label>
         <select id="itemSelect">
             <option value="">-- 请选择商品 --</option>
@@ -57,6 +59,8 @@ tr:last-child td{border-bottom:none}
     </div>
 
     <div class="controls">
+        <label for="marketSearch">搜索：</label>
+        <input id="marketSearch" type="text" placeholder="坊市/拼音/首字母" style="flex:1;min-width:160px;padding:10px 16px;border-radius:8px;border:1px solid #ddd;font-size:14px;outline:none">
         <label for="marketSelect">选择坊市：</label>
         <select id="marketSelect">
             <option value="戈居坊市">戈居坊市</option>
@@ -182,9 +186,52 @@ const marketData = {
 };
 
 const marketSelect = document.getElementById('marketSelect');
+const marketSearch = document.getElementById('marketSearch');
 const itemSelect = document.getElementById('itemSelect');
+const itemSearch = document.getElementById('itemSearch');
 const priceBody = document.getElementById('priceBody');
 const compareBody = document.getElementById('compareBody');
+
+const pinyinKeys = {
+    "戈居坊市": "gejufangshi gjfs",
+    "肤施坊市": "fushifangshi fsfs",
+    "虎威坊市": "huweifangshi hwfs",
+    "天水坊市": "tianshuifangshi tsfs",
+    "大城坊市": "dachengfangshi dcfs",
+    "逐鹿坊市": "zhulufangshi zlfs",
+    "云中坊市": "yunzhongfangshi yzfs",
+    "谷物": "guwu gw",
+    "黏土": "niantu nt",
+    "葡萄": "putao pt",
+    "铁矿石": "tiekuangshi tks",
+    "铜矿石": "tongkuangshi tks",
+    "硬木": "yingmu ym",
+    "棉花": "mianhua mh",
+    "茶叶": "chaye cy",
+    "药材": "yaocai yc",
+    "香料": "xiangliao xl",
+    "毛皮": "maopi mp",
+    "蜂蜜": "fengmi fm",
+    "盐": "yan y",
+    "米酒": "mijiu mj",
+    "陶器": "taoqi tq",
+    "葡萄酒": "putaojiu ptj",
+    "兵器": "bingqi bq",
+    "铜器": "tongqi tq",
+    "工具": "gongju gj",
+    "布帛": "bubo bb"
+};
+
+function norm(s) {
+    return String(s || '').toLowerCase().replace(/\s+/g, '');
+}
+
+function matchesQuery(label, query) {
+    const q = norm(query);
+    if (!q) return true;
+    const key = norm(label + ' ' + (pinyinKeys[label] || ''));
+    return key.includes(q);
+}
 
 function renderTable() {
     const market = marketSelect.value;
@@ -207,6 +254,7 @@ function renderTable() {
 
 function updateItemDropdown() {
     const currentItem = itemSelect.value;
+    const query = itemSearch.value;
     const itemsSet = new Set();
     Object.keys(marketData).forEach(market => {
         const items = marketData[market];
@@ -214,7 +262,7 @@ function updateItemDropdown() {
     });
 
     itemSelect.innerHTML = '<option value="">-- 请选择商品 --</option>';
-    [...itemsSet].sort().forEach(name => {
+    [...itemsSet].sort().filter(name => matchesQuery(name, query)).forEach(name => {
         const option = document.createElement('option');
         option.value = name;
         option.textContent = name;
@@ -253,19 +301,32 @@ function renderCompare() {
 
 function updateDropdown() {
     const currentMarket = marketSelect.value;
+    const query = marketSearch.value;
     marketSelect.innerHTML = '';
-    Object.keys(marketData).sort().forEach(market => {
+    Object.keys(marketData).sort().filter(market => matchesQuery(market, query)).forEach(market => {
         const option = document.createElement('option');
         option.value = market;
         option.textContent = market;
         marketSelect.appendChild(option);
     });
-    marketSelect.value = currentMarket;
+    if (currentMarket && [...marketSelect.options].some(o => o.value === currentMarket)) {
+        marketSelect.value = currentMarket;
+    } else if (marketSelect.options.length) {
+        marketSelect.selectedIndex = 0;
+    }
 }
 
 // 监听切换
 marketSelect.onchange = renderTable;
 itemSelect.onchange = renderCompare;
+marketSearch.oninput = () => {
+    updateDropdown();
+    renderTable();
+};
+itemSearch.oninput = () => {
+    updateItemDropdown();
+    renderCompare();
+};
 
 // 初始加载
 updateDropdown();

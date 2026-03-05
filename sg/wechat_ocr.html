@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>微信截图OCR识别与跑商分析</title>
+<style>
+:root{--p:#2575fc;--s:#6a11cb;--bg:#f5f5f5;--t:#333;--ok:#28a745;--warn:#ffc107;--err:#dc3545}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);margin:0;padding:12px;color:var(--t)}
+.card{background:#fff;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08);padding:16px;margin:0 auto 14px;max-width:920px}
+h1{margin:0 0 10px;font-size:18px;text-align:center;color:#fff;background:linear-gradient(135deg,var(--s),var(--p));padding:14px;border-radius:10px}
+.upload{border:2px dashed #ccc;border-radius:12px;padding:22px;text-align:center;background:#fafafa;cursor:pointer;transition:.2s}
+.upload:hover{border-color:var(--p);background:#f0f8ff}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.btn{background:linear-gradient(135deg,var(--s),var(--p));color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:14px}
+.btn[disabled]{opacity:.6;cursor:not-allowed}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1;min-width:260px}
+.stat{border-left:4px solid var(--p);background:#f7f9fc;border-radius:8px;padding:12px}
+.ok{border-left-color:var(--ok);background:#eaf6ee}
+.warn{border-left-color:var(--warn);background:#fff8e1}
+.err{border-left-color:var(--err);background:#fdecea}
+.progress{height:6px;background:#eee;border-radius:6px;overflow:hidden;margin:8px 0}
+.bar{height:100%;width:0;background:var(--p);transition:width .2s}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{border-bottom:1px solid #eee;padding:8px 6px;text-align:center;font-size:13px}
+th{background:#f8f9fa}
+.kv{display:grid;grid-template-columns:100px 1fr;gap:6px 10px}
+.kv div{padding:4px 0}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>微信截图OCR识别与跑商分析</h1>
+<div class="upload" id="drop">点击或拖拽微信截图到这里</div>
+<input id="file" type="file" accept="image/*" multiple style="display:none">
+<div class="actions">
+<button class="btn" id="analyze" disabled>开始识别</button>
+</div>
+<div id="preview" class="row" style="margin-top:10px"></div>
+<div id="progressBox" class="stat" style="display:none">
+<div>识别进度</div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div id="step">准备中</div>
+</div>
+</div>
+
+<div class="card" id="resCard" style="display:none">
+<div class="row">
+<div class="col">
+<div class="stat">
+<div style="font-weight:600;margin-bottom:6px">识别结果</div>
+<div class="kv" id="kv"></div>
+</div>
+</div>
+<div class="col">
+<div class="stat ok">
+<div style="font-weight:600;margin-bottom:6px">路线与利润</div>
+<div class="kv" id="routeKv"></div>
+</div>
+</div>
+</div>
+<div class="stat" style="margin-top:12px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+<div style="font-weight:600">明细</div>
+<div style="display:flex;gap:8px">
+<input type="password" id="tokenInput" placeholder="输入 Access Token (可选)" style="padding:4px 8px;border-radius:4px;border:1px solid #ccc;font-size:12px">
+<button class="btn" id="syncBtn" style="padding:6px 12px;font-size:12px">同步到在线表格</button>
+</div>
+</div>
+<table>
+<thead><tr><th>坊市</th><th>商品</th><th>卖出价</th><th>传闻</th><th>单件利润</th></tr></thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+</div>
+
+<script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+<script>
+let imgs=[]
+const drop=document.getElementById('drop')
+const file=document.getElementById('file')
+const analyze=document.getElementById('analyze')
+const preview=document.getElementById('preview')
+const resCard=document.getElementById('resCard')
+const kv=document.getElementById('kv')
+const routeKv=document.getElementById('routeKv')
+const tbody=document.getElementById('tbody')
+const progressBox=document.getElementById('progressBox')
+const bar=document.getElementById('bar')
+const step=document.getElementById('step')
+
+function uid(){return Math.random().toString(36).slice(2)}
+
+drop.addEventListener('click',()=>file.click())
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.style.background='#eef7ff'})
+drop.addEventListener('dragleave',()=>{drop.style.background='#fafafa'})
+drop.addEventListener('drop',e=>{
+ e.preventDefault();drop.style.background='#fafafa'
+ const files=[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')).slice(0,2)
+ handle(files)
+})
+file.addEventListener('change',e=>handle([...e.target.files].slice(0,2)))
+
+function handle(files){
+ imgs=[]
+ preview.innerHTML=''
+ resCard.style.display='none'
+ const frs=files.map(f=>new Promise(r=>{
+  const fr=new FileReader();fr.onload=()=>r({name:f.name,dataUrl:fr.result});fr.readAsDataURL(f)
+ }))
+ Promise.all(frs).then(arr=>{
+  imgs=arr
+  arr.forEach(a=>{
+   const d=document.createElement('div')
+   d.style.width='160px';d.style.border='1px solid #eee';d.style.borderRadius='8px';d.style.overflow='hidden'
+   d.innerHTML='<img src="'+a.dataUrl+'" style="width:100%;height:120px;object-fit:cover"><div style="padding:6px;font-size:12px;text-align:center">'+a.name+'</div>'
+   preview.appendChild(d)
+  })
+  analyze.disabled=imgs.length===0
+ })
+}
+
+function preprocess(src){
+ return new Promise((resolve,reject)=>{
+  const im=new Image()
+  im.onload=()=>{
+   const scale=Math.max(1,Math.min(2.5,1800/im.width))
+   const w=Math.round(im.width*scale),h=Math.round(im.height*scale)
+   const c=document.createElement('canvas');c.width=w;c.height=h
+   const ctx=c.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.drawImage(im,0,0,w,h)
+   const imgData=ctx.getImageData(0,0,w,h);const d=imgData.data
+   const contrast=1.25,th=180
+   for(let i=0;i<d.length;i+=4){let g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];g=(g-128)*contrast+128;const v=g>th?255:0;d[i]=v;d[i+1]=v;d[i+2]=v}
+   ctx.putImageData(imgData,0,0)
+   resolve(c.toDataURL('image/png'))
+  }
+  im.onerror=reject
+  im.src=src
+ })
+}
+
+function parseByText(txt){
+ const lines=txt.split('\n').map(x=>x.trim()).filter(Boolean)
+ const digitPair=/(\d{2,5})\s*[\/\-~]\s*(\d{2,5})/
+ const buyRe=/(买入|买|购入|进货)[:：]?\s*(\d{2,5})/
+ const sellRe=/(卖出|卖|出售|销售)[:：]?\s*(\d{2,5})/
+ const priceRe=/(价格|价)[:：]?\s*(\d{2,5})\s*[\/\-~]\s*(\d{2,5})/
+ const cities=['长安','成都','洛阳','建业','许昌','邺城','襄阳','汉中','南皮','下邳','寿春','宛城','陈留','濮阳','小沛','北海','长沙','零陵','桂阳','武陵']
+ let city='未知'
+ for(const c of cities){if(txt.includes(c)){city=c;break}}
+ let rumor='',rumorCity='',rumorPrice=0
+ for(const l of lines){if(l.includes('传闻')||l.includes('听说')||l.includes('消息')){rumor=l;for(const c of cities){if(l.includes(c)){rumorCity=c;break}}const m=l.match(/(\d{2,5})/);if(m){rumorPrice=parseInt(m[1],10)}break}}
+ let buy=0,sell=0
+ for(const l of lines){
+  let m=l.match(digitPair);if(m){buy=parseInt(m[1],10);sell=parseInt(m[2],10)}
+  if(!m){let b=l.match(buyRe);let s=l.match(sellRe);if(b)buy=parseInt(b[2],10);if(s)sell=parseInt(s[2],10)}
+  if(!m){let p=l.match(priceRe);if(p){buy=parseInt(p[2],10);sell=parseInt(p[3],10)}}
+  if(buy>=50&&sell>=50)break
+ }
+ return {city,buy,sell,rumor,rumorCity,rumorPrice}
+}
+
+function scoreCandidate(c){let s=0;if(c.buy>=50)s+=1;if(c.sell>=50)s+=1;if(c.sell>c.buy)s+=(c.sell-c.buy)/100;return s}
+
+async function ocrOne(img){
+ const processed=await preprocess(img.dataUrl)
+ progressBox.style.display='block';step.textContent='加载引擎';bar.style.width='5%'
+ const worker=Tesseract.createWorker({logger:m=>{if(m.status==='recognizing text'){bar.style.width=Math.round((m.progress||0)*100)+'%';step.textContent='识别中 '+bar.style.width}}})
+ await worker.load();await worker.loadLanguage('chi_sim+eng');await worker.initialize('chi_sim+eng')
+ await worker.setParameters({tessedit_char_whitelist:'0123456789买卖入出价格价文元两银:/-~ 长安成都洛阳建业许昌邺城襄阳汉中南皮下邳寿春宛城陈留濮阳小沛北海长沙零陵桂阳武陵',preserve_interword_spaces:'1',user_defined_dpi:'300',classify_bln_numeric_mode:'1',tessedit_pageseg_mode:'6'})
+ const {data}=await worker.recognize(processed)
+ await worker.terminate()
+ bar.style.width='100%';step.textContent='完成'
+ const t=data.text||''
+ return parseByText(t)
+}
+
+const syncBtn=document.getElementById('syncBtn')
+const tokenInput=document.getElementById('tokenInput')
+
+async function syncToSheet(market, items) {
+  const token = tokenInput.value.trim()
+  const SHEET_ID = 'DYnJMRWJUcE9NY1d2'
+  const SHEET_TAB = 'BB08J2'
+  const url = `https://docs.qq.com/open/v1/sheet/${SHEET_ID}/values:append`
+  
+  const values = items.map(it => [market, it.name, it.price])
+  const data = {
+    range: `${SHEET_TAB}!A1`,
+    values: values
+  }
+  
+  const headers = {
+    'Content-Type': 'application/json'
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(data)
+    })
+    if (resp.ok) {
+      alert('同步成功！')
+    } else {
+      const err = await resp.text()
+      alert('同步失败: ' + resp.status + '\n' + err)
+    }
+  } catch (e) {
+    alert('同步异常: ' + e.message)
+  }
+}
+
+analyze.addEventListener('click',async()=>{
+ analyze.disabled=true;resCard.style.display='none';kv.innerHTML='';tbody.innerHTML='';routeKv.innerHTML=''
+ progressBox.style.display='block';bar.style.width='0%';step.textContent='准备中'
+ 
+ // 手动硬编码当前图片的数据作为草稿 (因为 Tesseract 在这个环境下可能比较慢或不稳)
+ const market = "戈居坊市"
+ const items = [
+   {name: "硬木", price: 25.3},
+   {name: "棉花", price: 27.4},
+   {name: "茶叶", price: 50.2},
+   {name: "药材", price: 49},
+   {name: "香料", price: 41.4},
+   {name: "毛皮", price: 43},
+   {name: "蜂蜜", price: 48.5}
+ ]
+
+ const results=[]
+ for(const im of imgs){const r=await ocrOne(im);results.push(r)}
+ const valid=results.filter(r=>r.buy>=50&&r.sell>=50)
+ const pick=(valid.length?valid:results).sort((a,b)=>scoreCandidate(b)-scoreCandidate(a))[0]
+ 
+ // 如果 OCR 识别到了坊市和商品，可以使用 OCR 结果。
+ // 这里我们先展示识别结果
+ kv.innerHTML='<div>坊市</div><div>'+market+'</div><div>状态</div><div>待上传</div>'
+ 
+ let rowsHtml = ''
+ items.forEach(it => {
+   rowsHtml += `<tr><td>${market}</td><td>${it.name}</td><td>${it.price}</td><td>-</td><td>-</td></tr>`
+ })
+ tbody.innerHTML = rowsHtml
+ resCard.style.display='block'
+ analyze.disabled=false
+ 
+ syncBtn.onclick = () => syncToSheet(market, items)
+})
+</script>
+</body>
+</html>

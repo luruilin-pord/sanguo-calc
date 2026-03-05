@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>坊市行情管理器</title>
+<style>
+:root{--p:#2575fc;--s:#6a11cb;--bg:#f4f7f6;--t:#333;--ok:#28a745;--warn:#ffc107;--err:#dc3545}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);margin:0;padding:12px;color:var(--t)}
+.card{background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:16px;margin:0 auto 14px;max-width:920px}
+h1{margin:0 0 10px;font-size:20px;text-align:center;color:#fff;background:linear-gradient(135deg,var(--s),var(--p));padding:16px;border-radius:10px}
+.upload-area{border:2px dashed #ccc;border-radius:12px;padding:30px;text-align:center;background:#fafafa;cursor:pointer;transition:.2s;margin-bottom:16px}
+.upload-area:hover{border-color:var(--p);background:#f0f8ff}
+.controls{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+select, button{padding:10px 16px;border-radius:8px;border:1px solid #ddd;font-size:14px;outline:none}
+select{flex:1;min-width:150px;background:#fff;cursor:pointer}
+button{background:linear-gradient(135deg,var(--s),var(--p));color:#fff;border:none;cursor:pointer;font-weight:600;transition:opacity .2s}
+button:hover{opacity:.9}
+button.secondary{background:#6c757d}
+table{width:100%;border-collapse:collapse;margin-top:10px;background:#fff;border-radius:8px;overflow:hidden}
+th,td{border-bottom:1px solid #eee;padding:12px;text-align:left;font-size:14px}
+th{background:#f8f9fa;font-weight:600;color:#666}
+tr:last-child td{border-bottom:none}
+.price-up{color:var(--err);font-weight:600}
+.price-down{color:var(--ok);font-weight:600}
+.time{font-size:12px;color:#999}
+#progressBox{display:none;margin-top:10px;padding:12px;background:#eef2f7;border-radius:8px}
+.progress-bar{height:6px;background:#ddd;border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;width:0;background:var(--p);transition:width .2s}
+#statusText{font-size:13px;color:#666}
+.empty-tip{text-align:center;padding:40px;color:#999;font-style:italic}
+</style>
+</head>
+<body>
+
+<div class="card">
+    <h1>坊市行情查询</h1>
+
+    <div class="controls">
+        <label for="marketSelect">选择坊市：</label>
+        <select id="marketSelect">
+            <option value="戈居坊市">戈居坊市</option>
+            <option value="肤施坊市">肤施坊市</option>
+            <option value="虎威坊市">虎威坊市</option>
+            <option value="天水坊市">天水坊市</option>
+        </select>
+    </div>
+
+    <div id="tableContainer">
+        <table id="priceTable">
+            <thead>
+                <tr>
+                    <th>商品名称</th>
+                    <th>卖出价格</th>
+                    <th>更新时间</th>
+                </tr>
+            </thead>
+            <tbody id="priceBody">
+                <!-- 数据行 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// 识别出的图片静态数据
+const marketData = {
+    "戈居坊市": {
+        "硬木": { price: 25.3, time: "2026-03-05 10:30" },
+        "棉花": { price: 27.4, time: "2026-03-05 10:30" },
+        "茶叶": { price: 50.2, time: "2026-03-05 10:30" },
+        "药材": { price: 49, time: "2026-03-05 10:30" },
+        "香料": { price: 41.4, time: "2026-03-05 10:30" },
+        "毛皮": { price: 43, time: "2026-03-05 10:30" },
+        "蜂蜜": { price: 48.5, time: "2026-03-05 10:30" },
+        "谷物": { price: 14.4, time: "2026-03-05 10:45" },
+        "黏土": { price: 18, time: "2026-03-05 10:45" }
+    },
+    "肤施坊市": {
+        "陶器": { price: 37.5, time: "2026-03-05 11:00" },
+        "葡萄酒": { price: 128.7, time: "2026-03-05 11:00" },
+        "兵器": { price: 144.1, time: "2026-03-05 11:00" },
+        "铜器": { price: 97.4, time: "2026-03-05 11:00" },
+        "工具": { price: 189.8, time: "2026-03-05 11:00" },
+        "布帛": { price: 145.7, time: "2026-03-05 11:00" }
+    },
+    "虎威坊市": {
+        "黏土": { price: 14.6, time: "2026-03-05 12:15" },
+        "谷物": { price: 18.7, time: "2026-03-05 12:15" },
+        "葡萄": { price: 16.3, time: "2026-03-05 12:15" },
+        "铁矿石": { price: 47.9, time: "2026-03-05 12:15" },
+        "铜矿石": { price: 27.8, time: "2026-03-05 12:15" },
+        "硬木": { price: 25.3, time: "2026-03-05 12:15" },
+        "棉花": { price: 26.6, time: "2026-03-05 12:15" },
+        "茶叶": { price: 63.3, time: "2026-03-05 12:15" },
+        "药材": { price: 41.1, time: "2026-03-05 12:15" },
+        "香料": { price: 36.3, time: "2026-03-05 12:15" },
+        "毛皮": { price: 45.2, time: "2026-03-05 12:15" },
+        "蜂蜜": { price: 39.1, time: "2026-03-05 12:15" },
+        "盐": { price: 107.5, time: "2026-03-05 12:15" },
+        "米酒": { price: 87.6, time: "2026-03-05 12:15" },
+        "陶器": { price: 40.9, time: "2026-03-05 12:15" },
+        "葡萄酒": { price: 116.7, time: "2026-03-05 12:15" },
+        "兵器": { price: 132.2, time: "2026-03-05 12:15" },
+        "铜器": { price: 69.4, time: "2026-03-05 12:15" }
+    },
+    "天水坊市": {
+        "棉花": { price: 26.9, time: "2026-03-05 12:20" },
+        "谷物": { price: 19.5, time: "2026-03-05 12:20" },
+        "黏土": { price: 24.6, time: "2026-03-05 12:20" },
+        "葡萄": { price: 10.3, time: "2026-03-05 12:20" },
+        "铁矿石": { price: 48.9, time: "2026-03-05 12:20" },
+        "铜矿石": { price: 27.9, time: "2026-03-05 12:20" },
+        "硬木": { price: 25.7, time: "2026-03-05 12:20" },
+        "茶叶": { price: 66.7, time: "2026-03-05 12:20" },
+        "药材": { price: 53.3, time: "2026-03-05 12:20" },
+        "香料": { price: 40.7, time: "2026-03-05 12:20" },
+        "毛皮": { price: 36.3, time: "2026-03-05 12:20" },
+        "蜂蜜": { price: 46.4, time: "2026-03-05 12:20" },
+        "盐": { price: 65.9, time: "2026-03-05 12:20" },
+        "米酒": { price: 89.7, time: "2026-03-05 12:20" }
+    }
+};
+
+const marketSelect = document.getElementById('marketSelect');
+const priceBody = document.getElementById('priceBody');
+
+function renderTable() {
+    const market = marketSelect.value;
+    priceBody.innerHTML = '';
+    
+    if (!market || !marketData[market]) return;
+    
+    const items = marketData[market];
+    Object.keys(items).sort().forEach(name => {
+        const data = items[name];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${name}</td>
+            <td class="price-up">${data.price}</td>
+            <td class="time">${data.time}</td>
+        `;
+        priceBody.appendChild(tr);
+    });
+}
+
+function updateDropdown() {
+    const currentMarket = marketSelect.value;
+    marketSelect.innerHTML = '';
+    Object.keys(marketData).sort().forEach(market => {
+        const option = document.createElement('option');
+        option.value = market;
+        option.textContent = market;
+        marketSelect.appendChild(option);
+    });
+    marketSelect.value = currentMarket;
+}
+
+// 监听切换
+marketSelect.onchange = renderTable;
+
+// 初始加载
+updateDropdown();
+renderTable();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>三国冰河·极简跑商计算器</title>
+    <style>
+        :root {
+            --primary: #2575fc;
+            --bg: #f5f5f5;
+            --text: #333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 10px;
+            color: var(--text);
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        h1 {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+        
+        /* 表格样式 */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px; /* 加大行间距 */
+            min-width: 550px;
+            table-layout: fixed;
+        }
+        colgroup {
+            col:nth-child(1) { width: 18%; }
+            col:nth-child(2) { width: 14%; }
+            col:nth-child(3) { width: 14%; }
+            col:nth-child(4) { width: 14%; }
+            col:nth-child(5) { width: 16%; }
+            col:nth-child(6) { width: 16%; }
+            col:nth-child(7) { width: 8%; }
+        }
+        th, td {
+            padding: 14px 10px;
+            text-align: center;
+            border: none;
+            font-size: 13px;
+            white-space: nowrap;
+            box-sizing: border-box;
+            background: #fff;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            line-height: 1.4;
+            border-bottom: 2px solid #ddd;
+        }
+
+        /* 输入框 */
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            text-align: center;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37,117,252,0.15);
+        }
+        input[readonly] {
+            background: #f9f9f9;
+            color: #666;
+            cursor: not-allowed;
+            border-color: #eee;
+        }
+
+        /* 下拉选择器 */
+        .custom-select-wrapper {
+            width: 100%;
+            position: relative;
+            display: inline-block;
+        }
+        .custom-select-input {
+            cursor: text;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 10px center;
+            padding-right: 25px;
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        .custom-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid var(--primary);
+            border-top: 0;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 10000;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            border-radius: 0 0 6px 6px;
+            display: none;
+            margin-top: -1px;
+        }
+        .custom-select-wrapper.open .custom-options { display: block; }
+        .custom-option {
+            padding: 8px 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+        .custom-option:hover {
+            background: #eef2ff;
+            color: var(--primary);
+        }
+        .weight-tag {
+            font-size: 11px;
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #666;
+        }
+        .no-results {
+            padding: 10px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            display: none;
+        }
+
+        /* 净利润单元格 */
+        .profit-cell {
+            font-weight: bold;
+            font-size: 14px;
+            /* 颜色由 JS 控制 */
+        }
+
+        /* 按钮 */
+        .btn-add {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 15px auto;
+            display: block;
+            box-shadow: 0 4px 6px rgba(37,117,252,0.2);
+        }
+        .btn-del {
+            background: #ffebee;
+            color: #d32f2f;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .btn-del:hover { background: #ffcdd2; }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: #888;
+            background: #fafafa;
+            border-top: 1px solid #eee;
+        }
+        .note {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 10px;
+            font-size: 12px;
+            text-align: center;
+            border-bottom: 1px solid #bbdefb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧊 三国冰河·极简跑商计算器</h1>
+        <div class="note">💡 提示：输入拼音首字母快速搜索 (如 "tks"=铜矿石)。每次整行修改后颜色变化：黑→绿→红→蓝→橙→循环。</div>
+        
+        <div class="table-wrapper">
+            <table id="tradingTable">
+                <colgroup>
+                    <col><col><col><col><col><col><col>
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>商品</th>
+                        <th>买入价</th>
+                        <th>卖出价</th>
+                        <th>数量</th>
+                        <th>总成本</th>
+                        <th>净利润</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <button class="btn-add" onclick="addRow()">+ 添加一行</button>
+        <div class="footer">数据仅供规划参考，实际交易请以游戏内为准</div>
+    </div>
+
+    <script>
+        // 商品数据
+        const products = [
+            {n:"黏土",w:15,p:"nian tu"}, {n:"棉花",w:13,p:"mian hua"}, {n:"茶叶",w:13,p:"cha ye"},
+            {n:"铁矿石",w:34,p:"tie kuang shi"}, {n:"铜矿石",w:35,p:"tong kuang shi"}, {n:"谷物",w:10,p:"gu wu"},
+            {n:"葡萄",w:10,p:"pu tao"}, {n:"硬木",w:15,p:"ying mu"}, {n:"药材",w:11,p:"yao cai"},
+            {n:"香料",w:10,p:"xiang liao"}, {n:"毛皮",w:18,p:"mao pi"}, {n:"蜂蜜",w:29,p:"feng mi"},
+            {n:"盐",w:35,p:"yan"}, {n:"米酒",w:30,p:"mi jiu"}, {n:"陶器",w:30,p:"tao qi"},
+            {n:"葡萄酒",w:30,p:"pu tao jiu"}, {n:"兵器",w:52,p:"bing qi"}, {n:"铜器",w:55,p:"tong qi"},
+            {n:"工具",w:50,p:"gong ju"}, {n:"布帛",w:16,p:"bu bo"}, {n:"蜀锦",w:10,p:"shu jin"},
+            {n:"漆器",w:32,p:"qi qi"}, {n:"玉器",w:32,p:"yu qi"}, {n:"海南珍珠",w:12,p:"hai nan zhen zhu"},
+            {n:"金银器",w:27,p:"jin yin qi"}
+        ];
+
+        // 颜色轮盘：黑 → 绿 → 红 → 蓝 → 橙
+        const editColors = ['#000000', '#2e7d32', '#d32f2f', '#1976d2', '#f57c00'];
+
+        window.onload = () => {
+            addRow("谷物", 14.1, 17.6, 100);
+            addRow("铜矿石", 58.4, 73.1, 50);
+        };
+
+        function addRow(defName="", buy="", sell="", qty="") {
+            const tbody = document.querySelector('#tradingTable tbody');
+            const tr = document.createElement('tr');
+
+            tr.dataset.editCount = '0'; // 初始为黑色
+            tr.dataset.timeoutId = null;
+
+            tr.innerHTML = `
+                <td>
+                    <div class="custom-select-wrapper" data-def="${defName}">
+                        <input type="text" class="custom-select-input" placeholder="搜商品..." autocomplete="off">
+                        <div class="custom-options"></div>
+                    </div>
+                </td>
+                <td><input type="number" class="buy-price" value="${buy}" step="0.1" placeholder="0"></td>
+                <td><input type="number" class="sell-price" value="${sell}" step="0.1" placeholder="0"></td>
+                <td><input type="number" class="plan-qty" value="${qty}" step="1" placeholder="0"></td>
+                <td><input type="text" class="cost-display" readonly value="0"></td>
+                <td><div class="profit-cell">0.00</div></td>
+                <td><button class="btn-del" onclick="removeRow(this)">×</button></td>
+            `;
+            tbody.appendChild(tr);
+
+            initSelect(tr.querySelector('.custom-select-wrapper'));
+
+            if(defName) {
+                setTimeout(()=>{
+                    const inp = tr.querySelector('.custom-select-input');
+                    inp.value = defName;
+                    selectOpt(tr.querySelector('.custom-select-wrapper'), defName, true);
+                }, 0);
+            }
+
+            // 绑定防抖输入事件
+            tr.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', () => {
+                    clearTimeout(tr.dataset.timeoutId);
+                    tr.dataset.timeoutId = setTimeout(() => {
+                        incrementEditCount(tr);
+                        calcRow(tr);
+                    }, 500); // 500ms 防抖
+                });
+            });
+
+            calcRow(tr);
+        }
+
+        function removeRow(btn) {
+            const rows = document.querySelectorAll('#tradingTable tbody tr');
+            if (rows.length > 1) {
+                btn.closest('tr').remove();
+            } else {
+                const row = btn.closest('tr');
+                row.querySelectorAll('input').forEach(i => {
+                    if (!i.readOnly) i.value = '';
+                    if (i.classList.contains('custom-select-input')) i.value = '';
+                });
+                row.dataset.editCount = '0';
+                calcRow(row);
+            }
+        }
+
+        function incrementEditCount(row) {
+            let count = parseInt(row.dataset.editCount) || 0;
+            row.dataset.editCount = (count + 1).toString();
+        }
+
+        function initSelect(wrap) {
+            const inp = wrap.querySelector('.custom-select-input');
+            const optsDiv = wrap.querySelector('.custom-options');
+            const row = wrap.closest('tr');
+
+            products.forEach(prod => {
+                const div = document.createElement('div');
+                div.className = 'custom-option';
+                div.innerHTML = `<span>${prod.n}</span><span class="weight-tag">${prod.w}</span>`;
+                div.dataset.v = prod.n;
+                div.dataset.p = prod.p;
+                optsDiv.appendChild(div);
+            });
+
+            const noRes = document.createElement('div');
+            noRes.className = 'no-results';
+            noRes.textContent = '无匹配商品';
+            optsDiv.appendChild(noRes);
+
+            inp.addEventListener('focus', e => {
+                e.stopPropagation();
+                closeAll();
+                wrap.classList.add('open');
+                filter(inp.value, optsDiv, noRes);
+            });
+
+            inp.addEventListener('input', e => {
+                e.stopPropagation();
+                wrap.classList.add('open');
+                filter(inp.value, optsDiv, noRes);
+            });
+
+            optsDiv.addEventListener('mousedown', e => {
+                e.preventDefault();
+                const target = e.target.classList.contains('custom-option') ? e.target : e.target.closest('.custom-option');
+                if (target && target.classList.contains('custom-option')) {
+                    selectOpt(wrap, target.dataset.v, true);
+                    clearTimeout(row.dataset.timeoutId);
+                    row.dataset.timeoutId = setTimeout(() => {
+                        incrementEditCount(row);
+                        calcRow(row);
+                    }, 500);
+                }
+            });
+
+            document.addEventListener('click', e => {
+                if (!wrap.contains(e.target)) wrap.classList.remove('open');
+            });
+        }
+
+        function filter(query, container, noRes) {
+            const q = query.toLowerCase().trim();
+            let hasMatch = false;
+            container.querySelectorAll('.custom-option').forEach(opt => {
+                const name = opt.dataset.v;
+                const pinyin = opt.dataset.p;
+                const match = name.includes(q) ||
+                              pinyin.replace(/\s/g, '').includes(q) ||
+                              pinyin.split(' ').map(x => x[0]).join('').includes(q);
+                opt.style.display = match ? 'flex' : 'none';
+                if (match) hasMatch = true;
+            });
+            noRes.style.display = hasMatch ? 'none' : 'block';
+        }
+
+        function selectOpt(wrap, val) {
+            const inp = wrap.querySelector('.custom-select-input');
+            inp.value = val;
+            wrap.classList.remove('open');
+        }
+
+        function closeAll() {
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+        }
+
+        function calcRow(row) {
+            const buy = parseFloat(row.querySelector('.buy-price').value) || 0;
+            const sell = parseFloat(row.querySelector('.sell-price').value) || 0;
+            const qty = parseInt(row.querySelector('.plan-qty').value) || 0;
+
+            const cost = buy * qty;
+            const profit = (sell - buy) * qty;
+
+            row.querySelector('.cost-display').value = cost.toLocaleString('zh-CN', {maximumFractionDigits: 1});
+            const profitCell = row.querySelector('.profit-cell');
+
+            profitCell.textContent = profit.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            // 应用颜色
+            const count = parseInt(row.dataset.editCount) || 0;
+            const color = editColors[count % editColors.length];
+            profitCell.style.color = color;
+        }
+    </script>
+</body>
+</html>

@@ -36,6 +36,26 @@ tr:last-child td{border-bottom:none}
 <div class="card">
     <h1>坊市行情查询</h1>
 
+    <div style="margin:12px 0 6px;font-weight:600;color:#555">商品价格对比</div>
+    <div class="controls">
+        <label for="itemSelect">选择商品：</label>
+        <select id="itemSelect">
+            <option value="">-- 请选择商品 --</option>
+        </select>
+    </div>
+    <div id="compareContainer">
+        <table id="compareTable">
+            <thead>
+                <tr>
+                    <th>坊市</th>
+                    <th>卖出价格</th>
+                    <th>更新时间</th>
+                </tr>
+            </thead>
+            <tbody id="compareBody"></tbody>
+        </table>
+    </div>
+
     <div class="controls">
         <label for="marketSelect">选择坊市：</label>
         <select id="marketSelect">
@@ -162,7 +182,9 @@ const marketData = {
 };
 
 const marketSelect = document.getElementById('marketSelect');
+const itemSelect = document.getElementById('itemSelect');
 const priceBody = document.getElementById('priceBody');
+const compareBody = document.getElementById('compareBody');
 
 function renderTable() {
     const market = marketSelect.value;
@@ -183,6 +205,52 @@ function renderTable() {
     });
 }
 
+function updateItemDropdown() {
+    const currentItem = itemSelect.value;
+    const itemsSet = new Set();
+    Object.keys(marketData).forEach(market => {
+        const items = marketData[market];
+        Object.keys(items).forEach(name => itemsSet.add(name));
+    });
+
+    itemSelect.innerHTML = '<option value="">-- 请选择商品 --</option>';
+    [...itemsSet].sort().forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        itemSelect.appendChild(option);
+    });
+
+    if (currentItem && itemsSet.has(currentItem)) {
+        itemSelect.value = currentItem;
+    }
+}
+
+function renderCompare() {
+    const itemName = itemSelect.value;
+    compareBody.innerHTML = '';
+    if (!itemName) return;
+
+    const rows = [];
+    Object.keys(marketData).forEach(market => {
+        const item = marketData[market]?.[itemName];
+        if (item && typeof item.price !== 'undefined') {
+            rows.push({ market, price: item.price, time: item.time || '' });
+        }
+    });
+
+    rows.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+    rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${r.market}</td>
+            <td class="price-up">${r.price}</td>
+            <td class="time">${r.time}</td>
+        `;
+        compareBody.appendChild(tr);
+    });
+}
+
 function updateDropdown() {
     const currentMarket = marketSelect.value;
     marketSelect.innerHTML = '';
@@ -197,10 +265,13 @@ function updateDropdown() {
 
 // 监听切换
 marketSelect.onchange = renderTable;
+itemSelect.onchange = renderCompare;
 
 // 初始加载
 updateDropdown();
+updateItemDropdown();
 renderTable();
+renderCompare();
 </script>
 
 </body>
